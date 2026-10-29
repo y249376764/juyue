@@ -2,7 +2,7 @@
   "v": 78,
   "build": 78,
   "version": 78,
-  "url": "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
-  "note": "v78 合并版：源码/图标/drpy 全部内置，导入即本地；首页图标改本地读取、更新检查走 jsDelivr 3 秒超时、首帧不再联网下载；聚阅已移除",
+  "url": "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
+  "note": "v78 合并版：源码/图标/drpy 全部内置，导入即本地；首页图标改本地读取、更新检查走 jsDelivr 3 秒超时、首帧不再联网下载；更新只下载一次；聚阅已移除",
   "time": "2026-10-29"
 }
