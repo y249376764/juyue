@@ -1631,7 +1631,10 @@ function Version() {
         var _dl = $.toString(function (U1) {
             var _rawList = [U1,
                 "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
-                "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt"];
+                "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
+                "https://gh-proxy.com/https://raw.githubusercontent.com/y249376764/juyue/main/rules/jy.txt",
+                "https://ghfast.top/https://raw.githubusercontent.com/y249376764/juyue/main/rules/jy.txt",
+                "https://raw.githubusercontent.com/y249376764/juyue/main/rules/jy.txt"];
             var _u = [];
             for (var z = 0; z < _rawList.length; z++) {
                 var _uu = String(_rawList[z] || "");
@@ -1640,12 +1643,15 @@ function Version() {
             var _err = "";
             for (var k = 0; k < _u.length; k++) {
                 try {
-                    toast("正在下载更新(" + (k + 1) + "/" + _u.length + ")，约900KB请稍候…");
-                    var t = request(_u[k], { timeout: 60000 });
+                    toast("正在下载更新(" + (k + 1) + "/" + _u.length + ")，约 950KB，请保持屏幕常亮…");
+                    var t = request(_u[k], { timeout: 45000 });
                     if (!t) { _err = "连接失败"; continue; }
                     var _ts = String(t);
-                    if (_ts.indexOf("base64://@") < 0 || _ts.length < 600000) { _err = "内容不完整"; continue; }
-                    return fetch(_u[k]);
+                    if (_ts.indexOf("base64://@") < 0 || _ts.length < 400000) { _err = "内容不完整"; continue; }
+                    // 只下载一次：直接用已经取到的文本去导入，不再 fetch 第二遍
+                    try { writeFile("hiker://files/rules/jy_update.txt", _ts); } catch (eW) { }
+                    toast("已下载 " + Math.round(_ts.length / 1024) + "KB，正在导入…");
+                    return _ts;
                 } catch (fe) { _err = (fe && fe.message) ? fe.message : "失败"; }
             }
             toast("更新失败：" + (_err || "网络不可用") + "，请换网络后重试");
