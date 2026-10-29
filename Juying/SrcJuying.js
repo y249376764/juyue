@@ -82,10 +82,15 @@ function jyCacheBuild() {
     }
     return false;
 }
-if (jyCacheOk()) {
-    jyCacheUse();
-} else if (String(config.聚影 || "").indexOf("hiker://") === 0 && jyRemoteEntry().indexOf("http") === 0) {
-    config.聚影 = jyRemoteEntry();
+var JY_CUR = String(config.聚影 || "");
+var JY_ISLOCAL = JY_CUR.indexOf("hiker://") === 0;
+var JY_OWN = (!JY_ISLOCAL) || JY_CUR.indexOf(JY_CDIR) === 0;
+if (JY_OWN) {
+    if (jyCacheOk()) {
+        jyCacheUse();
+    } else if (JY_ISLOCAL && jyRemoteEntry().indexOf("http") === 0) {
+        config.聚影 = jyRemoteEntry();
+    }
 }
 require((config.聚影||config.依赖).replace(/[^/]*$/,'') + 'SrcJyPublic.js');//加载公共文件
 
@@ -1631,7 +1636,7 @@ function yiji() {
         dianboyiji(null, d);
     }
 
-    if (MY_PAGE == 1 && !jyCacheOk()) { try { jyCacheBuild(); } catch (eC) { } }
+    if (MY_PAGE == 1 && JY_OWN && !jyCacheOk()) { try { jyCacheBuild(); } catch (eC) { } }
     // 一些自动检查调用在首页加载后，间隔24小时
     let nowtime = Date.now();
     let oldstartChecktime = parseInt(getItem('startChecktime','0').replace('time',''));
