@@ -1,0 +1,8 @@
+{
+  "v": 79,
+  "build": 79,
+  "version": 79,
+  "url": "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy79.txt",
+  "note": "v79 小壳版：口令 211KB（v78 是 977KB，手机上复制/导入容易失败）；源码与图标打成 pack.txt，首次打开下载 550KB 解包后本地运行；更新只下载一次、5 个镜像；聚阅已移除",
+  "time": "2026-10-29"
+}
