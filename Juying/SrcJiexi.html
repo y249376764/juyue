@@ -14,7 +14,7 @@ var origin=document.location.href.split("url=")[1];
 var iframeHtml="";
 for(var i=0;i<apiArray.length;i++){
 var URL=apiArray[i]+origin;
-iframeHtml=iframeHtml+"<iframe sandbox='allow-scripts allow-same-origin allow-forms' frameborder='0' allowfullscreen='true' webkitallowfullscreen='true' mozallowfullscreen='true' src=\'" + URL + "\'></iframe>";
+iframeHtml=iframeHtml+"<iframe sandbox='allow-scripts allow-same-origin allow-forms' frameborder='0' allowfullscreen='true' webkitallowfullscreen='true' mozallowfullscreen='true' src="+URL+"></iframe>";
 }
 document.write(iframeHtml);
 </script>

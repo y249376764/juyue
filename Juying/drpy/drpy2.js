@@ -21,10 +21,10 @@ const cheerio = {
         })[0];
     }
 }
-// import cheerio from "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/cheerio.min.js";
-// import "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/crypto-js.js";
-// import 模板 from"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/muban.js";
-// import {gbkTool} from 'https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/gbk.js'
+// import cheerio from "https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/cheerio.min.js";
+// import "https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/crypto-js.js";
+// import 模板 from"https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/js/模板.js";
+// import {gbkTool} from 'https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/gbk.js'
 let vercode = typeof (pdfl) === 'function' ? 'drpy2.1' : 'drpy2';
 const VERSION = vercode + ' 3.9.51beta5 20241104';
 const UpdateInfo = [
@@ -885,7 +885,7 @@ function decodeStr(input, encoding) {
 }
 
 function getCryptoJS() {
-    // return request('https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/crypto-hiker.js');
+    // return request('https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/crypto-hiker.js');
     return 'console.log("CryptoJS已装载");'
 }
 
@@ -2403,7 +2403,7 @@ function categoryParse(cateObj) {
             vod_name: '无数据,防无限请求',
             vod_id: 'no_data',
             vod_remarks: '不要点,会崩的',
-            vod_pic: 'https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/img/icon.png'
+            vod_pic: 'https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/404.jpg'
         }],
         total: 1, pagecount: 1, page: 1, limit: 1
     };
@@ -3215,7 +3215,7 @@ function init(ext) {
     try {
         // make shared jsContext happy muban不能import,不然会造成换源继承后变量被篡改
         // if (typeof (globalThis.mubanJs) === 'undefined') {
-        //     let mubanJs = request('https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/drpy/libs/muban.js', { 'User-Agent': MOBILE_UA });
+        //     let mubanJs = request('https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/js/模板.js', { 'User-Agent': MOBILE_UA });
         //     mubanJs = mubanJs.replace('export default', '(function() {return muban;}()) // export default');
         //     // console.log(mubanJs);
         //     globalThis.mubanJs = mubanJs;

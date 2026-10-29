@@ -1,7 +1,7 @@
 var newVersion = {
     "SrcJuying":"2.8",
     "hint": "",
-    "codeDownload": "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/juying.hiker",
+    "codeDownload": "https://src48597962.lanzouo.com/ilaDP2wbexng",
     "JYUpdateRecords": [{
         title: "2025/07/11 V2.8",
         records: [

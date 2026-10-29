@@ -178,9 +178,6 @@ function lookset() {
     d.push({
         title: '本地解析管理',
         url: $('#noLoading#').lazyRule(() => {
-            if(getItem("sourceMode")=="2"){
-                return "toast://订阅文件模式，无法管理本地解析";
-            }
             putMyVar('guanli','jx');
             return $("hiker://empty#noRecordHistory##noHistory#").rule(() => {
                 setPageTitle('解析管理');
@@ -462,54 +459,66 @@ function lookset() {
     writeFile(cfgfile, JSON.stringify(Juconfig));
 }
 //主页导航按钮菜单
-let menubtns = ["管理", "历史", "收藏", "点播", "直播", "Alist", "云盘"];
+let menubtns = ["管理", "历史", "收藏", "点播", "直播", "Alist", "云盘", "内置"];
 let nochange = getItem('主页大图标不变化','0');
 let buttonmenu = {
     "管理": {
-        img: getIcon("主页-管理.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/129.png",
+        img: getIcon("主页-管理.svg", nochange),//"https://hikerfans.com/tubiao/more/129.png",
         url: $("hiker://empty#noRecordHistory##noHistory#").rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyMenu.js');
             manageSet();
         })
     },
     "历史": {
-        img: getIcon("主页-历史.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/213.png",
+        img: getIcon("主页-历史.svg", nochange),//"https://hikerfans.com/tubiao/more/213.png",
         url: "hiker://history?rule=" + MY_RULE.title
     },
     "收藏": {
-        img: getIcon("主页-收藏.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/109.png",
+        img: getIcon("主页-收藏.svg", nochange),//"https://hikerfans.com/tubiao/more/109.png",
         url: "hiker://collection?rule=" + MY_RULE.title
     },
     "点播": {
-        img: getIcon("主页-点播.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/105.png",
+        img: getIcon("主页-点播.svg", nochange),//"https://hikerfans.com/tubiao/more/105.png",
         url: $("hiker://empty##fypage#noRecordHistory##noHistory#").rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJuying.js');
             dianboyiji();
         })
     },
     "直播": {
-        img: getIcon("主页-直播.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/87.png",
+        img: getIcon("主页-直播.svg", nochange),//"https://hikerfans.com/tubiao/more/87.png",
         url: $("hiker://empty#noRecordHistory##noHistory#").rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcLive.js');
             Live();
         })
     },
     "Alist": {
-        img: getIcon("主页-Alist.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/226.png",//hiker://files/cache/src/Alist.svg
+        img: getIcon("主页-Alist.svg", nochange),//"https://hikerfans.com/tubiao/more/226.png",//hiker://files/cache/src/Alist.svg
         url: $("hiker://empty###noRecordHistory##noHistory#").rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyAlist.js');
             alistHome();
         })
     },
     "云盘": {
-        img: getIcon("主页-云盘.svg", nochange),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/97.png",
+        img: getIcon("主页-云盘.svg", nochange),//"https://hikerfans.com/tubiao/more/97.png",
         url: $("hiker://empty#noRecordHistory##noHistory#").rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyAliDisk.js');
             aliMyDisk();
         })
+    },
+    "内置": {
+        img: getIcon("主页-管理.svg", nochange),
+        url: "hiker://page/jyTvbox#noHistory##noRecordHistory#"
     }
 }
 //管理中心
+// 当前规则版本：config 页 $.exports.version 才是准的，MY_RULE.version 常年为 0
+function _jyCurVer() {
+    var v = 0;
+    try { v = parseInt($.require("config").version) || 0; } catch (e) { v = 0; }
+    if (!v) { try { v = parseInt(MY_RULE.version) || 0; } catch (e2) { v = 0; } }
+    return v;
+}
+
 function manageSet(){
     addListener("onClose", $.toString(() => {
         //refreshPage(false);
@@ -525,6 +534,22 @@ function manageSet(){
         img: getIcon("管理-依赖.svg"),
         col_type: 'avatar',
         url: 'hiker://empty'
+    });
+    // ★ chaquopy 运行时安装入口（py 源全挂时点这里重装即可，蜘蛛/聚影共用同一套运行时）
+    var _chqOk = "";
+    try {
+        var _cd = ["hiker://files/plugins/chaquopy/", "hiker://files/data/chaquopy/", "hiker://files/data/Chaquopy/"];
+        for (var _i = 0; _i < _cd.length; _i++) {
+            if (fileExist(_cd[_i] + "chaquopy.apk") && fileExist(_cd[_i] + "classes.dex")
+                && fileExist(_cd[_i] + "arm64-v8a") && fileExist(_cd[_i] + "libs_py")) { _chqOk = _cd[_i]; break; }
+        }
+    } catch (_e) { _chqOk = ""; }
+    d.push({
+        title: _chqOk ? '✅ Python 引擎已就绪 · 点此重装修复' : '❌ Python 引擎未安装 · 点此下载安装',
+        img: getIcon("管理-箭头.svg"),
+        desc: _chqOk ? ('py 源可用 · ' + _chqOk) : 'py 源全挂(undefined.get)/聚影蜘蛛同时失效时点这里',
+        url: 'hiker://page/pyInstall#noHistory#',
+        col_type: 'text_icon'
     });
     d.push({
         title: 'github加速管理',
@@ -554,6 +579,34 @@ function manageSet(){
         col_type: 'text_icon'
     });
     d.push({
+        title: '⚙️ 内置安装状态',
+        img: getIcon("管理-箭头.svg"),
+        url: $('hiker://empty#noRecordHistory##noHistory#').rule(() => {
+            var DIRX2 = "hiker://files/rules/Src/Juying2/";
+            var fg = String(fetch(DIRX2 + "embed_installed.json"));
+            var info = "未安装内嵌源码";
+            if (fg && fg != "") {
+                try {
+                    var o = JSON.parse(fg);
+                    info = "已安装 " + o.ok + "/" + o.n + " 个文件\n版本 " + o.v;
+                } catch (e) { info = "标记文件异常：" + fg.substr(0, 60); }
+            }
+            // ★ 原来读 getItem('依赖')，但 initConfig() 写的是 config 而非 getItem 存储
+            //   -> 读到的是旧值 -> 明明用的是本地源码却显示"远程 ⚠️"
+            //   改成优先读真正生效的 config.聚影
+            var dep = "";
+            try { dep = String((typeof config !== 'undefined' && config.聚影) ? config.聚影 : ''); } catch (e0) { dep = ""; }
+            if (!dep) { try { dep = String(getItem('依赖', '') || ''); } catch (e2) { dep = ""; } }
+            if (!dep) { try { dep = String(getMyVar('Src_Jy_gmParams', '') && globalMap0.getVar('Src_Jy_gmParams').codepath ? globalMap0.getVar('Src_Jy_gmParams').codepath : ''); } catch (e3) { } }
+            info += "\n当前依赖：" + (dep.indexOf('hiker://') === 0 ? "本地 ✅" : "远程 ⚠️");
+            info += "\n（" + (dep || '空') + "）";
+            var dd = [];
+            dd.push({ title: info, col_type: 'rich_text', extra: { textSize: 14 } });
+            setResult(dd);
+        }),
+        col_type: 'text_icon'
+    });
+    d.push({
         col_type: "line_blank"
     });
     d.push({
@@ -568,15 +621,6 @@ function manageSet(){
         url: $('hiker://empty#noRecordHistory##noHistory#').rule(() => {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
             shareResource();
-        }),
-        col_type: 'text_icon'
-    });
-    d.push({
-        title: '资源码订阅管理',
-        img: getIcon("管理-箭头.svg"),
-        url: $('hiker://empty#noRecordHistory##noHistory#').rule(() => {
-            require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
-            subResource();
         }),
         col_type: 'text_icon'
     });
@@ -720,64 +764,67 @@ function manageSet(){
         }
     });
     d.push({
-        title: '查看更新日志',
+        title: '🔄 检查更新（v' + _jyCurVer() + '）',
         img: getIcon("管理-箭头.svg"),
         col_type: 'text_icon',
-        url: $("#noLoading#").lazyRule(() => {
-            eval(fetch(getItem("依赖","").replace(/[^/]*$/,'') + 'SrcTmplVersion.js'));
-            let updateRecords = newVersion.JYUpdateRecords || [];
-
-            const hikerPop = $.require(getItem("依赖","").replace(/[^/]*$/,'') + 'plugins/hikerPop.js');
-            hikerPop.updateRecordsBottom(updateRecords);
-            
-            return "hiker://empty";
-        })
-    });
-    d.push({
-        title: '检测版本更新',
-        img: getIcon("管理-箭头.svg"),
-        col_type: 'text_icon',
-        url: $("#noLoading#").lazyRule(() => {
-            if(!getItem("依赖","")){
-                return "toast://代码库获取异常，无法更新！";
+        url: $('#noLoading#').lazyRule(function(){
+            var _nowMs=0;try{_nowMs=new java.util.Date().getTime();}catch(e){_nowMs=0;}
+            var _lastMs=0;try{_lastMs=parseInt(getItem('jy_vchk_ms','0'))||0;}catch(e){_lastMs=0;}
+            if(_nowMs>0&&(_nowMs-_lastMs<60000)){toast('刚检查过，60秒后再试');return 'hiker://empty';}
+            var _vUrls=[
+                'https://raw.githubusercontent.com/y249376764/jy-update/main/version.json',
+                'https://gh-proxy.com/https://raw.githubusercontent.com/y249376764/jy-update/main/version.json',
+                'https://cdn.jsdelivr.net/gh/y249376764/jy-update@main/version.json'
+            ];
+            var _vJo=null;
+            for(var i=0;i<_vUrls.length;i++){
+                try{
+                    var _r=request(_vUrls[i],{timeout:15000});
+                    if(_r&&String(_r).indexOf('{')>-1){try{_vJo=JSON.parse(_r);}catch(e2){_vJo=null;}if(_vJo&&_vJo.build)break;}
+                }catch(e3){}
             }
-            if(!getItem("依赖","").startsWith("http")){
-                return "toast://非在线代码库，无法更新！";
-            }
-            try{
-                eval(request(getItem("依赖","").replace(/[^/]*$/,'') + 'SrcTmplVersion.js'))
-                let nowVersion = getItem('Version', getMyVar('Src_Jy_Version', '0.1').replace('-V',''));
-                let nowtime = Date.now();
-                if (parseFloat(newVersion.SrcJuying) > parseFloat(nowVersion)) {
-                    confirm({
-                        title: '发现新版本，是否更新？', 
-                        content: '本地V'+nowVersion+' => 云端V'+newVersion.SrcJuying, 
-                        confirm: getItem('本地依赖库')=="1"?$.toString((codeDownload) => {
-                            return "web://" + codeDownload;
-                        },newVersion.codeDownload):$.toString((nowtime,newVersion) => {
-                            setItem('Version', newVersion);
-                            setItem('VersionChecktime', nowtime+'time');
-                            deleteCache();
-                            putMyVar('Src_Jy_Version', '-V'+newVersion);
-                            refreshPage();
-                        },nowtime, newVersion.SrcJuying),
-                        cancel:''
-                    })
-                }else{
-                    toast('已经为最新版本');
+            if(!_vJo){toast('检查更新失败：网络不可用，请稍后再试');return 'hiker://empty';}
+            try{setItem('jy_vchk_ms',String(_nowMs));}catch(e4){}
+            var _rBuild=parseInt(_vJo.build)||0;
+            var _lBuild=0;
+            try{_lBuild=parseInt($.require("config").version)||0;}catch(eL1){_lBuild=0;}
+            if(!_lBuild){try{_lBuild=parseInt(MY_RULE.version)||0;}catch(eL2){}}
+            var _rV=parseInt(_vJo.v)||0;
+            if(!(_rBuild>_lBuild)){toast('已是最新版本 v'+_lBuild);return 'hiker://empty';}
+            var _pkgUrl=String(_vJo.url||'');
+            if(!_pkgUrl||_pkgUrl.indexOf('http')!==0){_pkgUrl='https://cdn.jsdelivr.net/gh/y249376764/jy-update@main/jy.txt';}
+            var _dl=$.toString(function(U1){
+                var _rawList=[U1,
+                    'https://cdn.jsdelivr.net/gh/y249376764/jy-update@main/jy.txt',
+                    'https://gh-proxy.com/https://raw.githubusercontent.com/y249376764/jy-update/main/jy.txt'];
+                var _u=[];
+                for(var z=0;z<_rawList.length;z++){
+                    var _uu=String(_rawList[z]||'');
+                    if(_uu&&_uu.indexOf('http')===0&&_u.indexOf(_uu)<0){_u.push(_uu);}
                 }
-            }catch(e){
-                toast('获取版本信息异常>'+e.message);
-            }
-            return "hiker://empty";
+                var _err='';
+                for(var k=0;k<_u.length;k++){
+                    try{
+                        toast('正在下载更新('+(k+1)+'/'+_u.length+')，约900KB请稍候…');
+                        var t=request(_u[k],{timeout:60000});
+                        if(!t){_err='连接失败';continue;}
+                        if(String(t).indexOf('base64://@')<0){_err='内容异常';continue;}
+                        return fetch(_u[k]);
+                    }catch(fe){_err=(fe&&fe.message)?fe.message:'失败';}
+                }
+                toast('更新失败：'+(_err||'网络不可用')+'，请换网络后重试');
+                return 'hiker://empty';
+            });
+            confirm({
+                title:'⬆️ 需要更新 v'+_rV,
+                content:String(_vJo.note||'有功能更新')+'\n\n当前版本：v'+_lBuild+'\n更新时间：'+String(_vJo.time||'')+'\n\n点确认立即下载安装。',
+                confirm:_dl,
+                cancel:_dl
+            });
+            return 'hiker://empty';
         })
     });
-    d.push({
-        title: '支持一下作者',
-        img: getIcon("管理-箭头.svg"),
-        col_type: 'text_icon',
-        url: config.聚影.replace(/[^/]*$/,'') + 'img/pay.jpg'
-    });
+
     d.push({
         col_type: "line_blank"
     });

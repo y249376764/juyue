@@ -1,106 +1,10 @@
 // 本代码仅用于个人学习，请勿用于其他作用，下载后请24小时内删除，代码虽然是公开学习的，但请尊重作者，应留下说明
-// ===== 首页加速：模块本地缓存（首屏先出，首进后台缓存，之后首页走本地） =====
-var JY_CDIR = "hiker://files/rules/Src/Juying2/";
-var JY_CFILES = ["SrcJuying.js", "SrcJyPublic.js", "SrcJyData.js", "SrcJySet.js", "SrcJyMenu.js", "SrcJyMethod.js", "SrcParseS.js", "SrcJyDrpy.js", "SrcJyAliDisk.js", "SrcJyAliPublic.js", "SrcJyAlist.js", "SrcLive.js", "SrcAutoTmpl.js", "SrcTmplVersion.js", "SrcJiexi.html", "plugins/globalmap.js", "plugins/gzip.js", "plugins/hikerPop.js", "plugins/m3u8_ad_rule.json", "plugins/pyDriver.js", "drpy/drpy2.js", "drpy/jsencrypt.js", "drpy/gbk.js"];
-var JY_CORE = ["SrcJuying.js", "SrcJyPublic.js", "SrcJyData.js", "SrcJySet.js", "SrcJyMenu.js", "plugins/pyDriver.js"];
-var JY_COK = null;
-function jyCoreReady() {
-    try {
-        for (var i = 0; i < JY_CORE.length; i++) {
-            if (!fileExist(JY_CDIR + JY_CORE[i])) { return false; }
-        }
-        return true;
-    } catch (e) { return false; }
+// ★ 本地源码优先：内嵌安装后强制走本地，避免 config.聚影 仍指向远程导致改动不生效
+var _LDIR = "hiker://files/rules/Src/Juying2/";
+if (String(fetch(_LDIR + "embed_installed.json")) != "" && fileExist(_LDIR + "SrcJyPublic.js")) {
+    try { config.聚影 = _LDIR + "SrcJuying.js"; } catch (eL) { }
 }
-function jyCacheOk() {
-    if (JY_COK !== null) { return JY_COK; }
-    JY_COK = false;
-    if (jyCoreReady()) {
-        var st = 0;
-        try { st = parseInt(fetch(JY_CDIR + "stamp.txt")) || 0; } catch (es) { st = 0; }
-        if (st && Date.now() - st <= 72 * 60 * 60 * 1000) { JY_COK = true; }
-    }
-    return JY_COK;
-}
-function jyRemoteEntry() {
-    var r = "";
-    try { r = String(getItem("Jy_remote", "") || ""); } catch (e0) { r = ""; }
-    if (r.indexOf("http") !== 0) {
-        try { r = String(config.聚影 || config.依赖 || ""); } catch (e1) { r = ""; }
-    }
-    if (r.indexOf("http") !== 0) { r = "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/SrcJuying.js"; }
-    return r;
-}
-function jyRemoteBase() { return jyRemoteEntry().replace(/[^/]*$/, ""); }
-function jyCacheClear() {
-    try {
-        for (var i = 0; i < JY_CFILES.length; i++) {
-            var p = JY_CDIR + JY_CFILES[i];
-            if (fileExist(p)) { deleteFile(p); }
-        }
-        if (fileExist(JY_CDIR + "stamp.txt")) { deleteFile(JY_CDIR + "stamp.txt"); }
-    } catch (e) { }
-    JY_COK = null;
-}
-function jyCacheUse() {
-    try { setItem("Jy_remote", jyRemoteEntry()); } catch (e0) { }
-    try { writeFile(JY_CDIR + "stamp.txt", String(Date.now())); } catch (e2) { }
-    try { config.聚影 = JY_CDIR + "SrcJuying.js"; } catch (e1) { }
-}
-function jyCacheBuild() {
-    if (jyCacheOk()) { jyCacheUse(); return true; }
-    var last = 0;
-    try { last = parseInt(getItem("Jy_cache_try", "0")) || 0; } catch (e0) { }
-    if (last && Date.now() - last < 10 * 60 * 1000) { return false; }
-    try { setItem("Jy_cache_try", String(Date.now())); } catch (e1) { }
-    var base = jyRemoteBase();
-    var hosts = [base];
-    if (base.indexOf("cdn.jsdelivr.net") > -1) { hosts.push(base.replace("cdn.jsdelivr.net", "fastly.jsdelivr.net")); }
-    hosts.push("https://gh-proxy.com/" + base);
-    hosts.push("https://ghfast.top/" + base);
-    var fail = 0;
-    for (var i = 0; i < JY_CFILES.length; i++) {
-        var dst = JY_CDIR + JY_CFILES[i];
-        var ok = false;
-        for (var h = 0; h < hosts.length; h++) {
-            try {
-                requireDownload(hosts[h] + JY_CFILES[i], dst, {"User-Agent": "Mozilla/5.0"});
-                if (fileExist(dst) && String(fetch(dst)) != "") { ok = true; break; }
-            } catch (e2) { }
-        }
-        if (!ok) {
-            fail++;
-            if (fail >= 2 && i < 6) { break; }
-        }
-        if (i == 4 || i == 10 || i == 15) { try { toast("本地加速缓存 " + (i + 1) + "/" + JY_CFILES.length); } catch (e3) { } }
-    }
-    JY_COK = null;
-    if (jyCoreReady()) {
-        jyCacheUse();
-        try { toast("✅ 首页已启用本地加速，下次进入更快"); } catch (e4) { }
-        return true;
-    }
-    return false;
-}
-var JY_CUR = String(config.聚影 || "");
-var JY_ISLOCAL = JY_CUR.indexOf("hiker://") === 0;
-var JY_OWN = (!JY_ISLOCAL) || JY_CUR.indexOf(JY_CDIR) === 0;
-if (JY_OWN) {
-    if (jyCacheOk()) {
-        jyCacheUse();
-    } else if (JY_ISLOCAL && jyRemoteEntry().indexOf("http") === 0) {
-        config.聚影 = jyRemoteEntry();
-    }
-}
-// 本地模块异常时清缓存回退远端，保证首页一定能打开
-try {
-    require((config.聚影||config.依赖).replace(/[^/]*$/,'') + 'SrcJyPublic.js');
-} catch (eLm) {
-    try { jyCacheClear(); } catch (eLm2) { }
-    config.聚影 = jyRemoteEntry();
-    require((config.聚影||config.依赖).replace(/[^/]*$/,'') + 'SrcJyPublic.js');
-}
-
+require((config.聚影||config.依赖).replace(/[^/]*$/,'') + 'SrcJyPublic.js');//加载公共文件
 
 // 搜索逻辑代码
 function search(name, sstype, jkdata) {
@@ -834,7 +738,27 @@ function dianboyiji(testSource, dd) {
                 js: $.toString(() => {
                     require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
                     deleteData('jk', homeSource);
-                    return "toast://已处理";
+                    // ★ 被删的正是当前源时，清掉缓存里的当前源指向，
+                    //   否则下次进页面仍按旧 homeSource 渲染，看起来"没删掉"
+                    try {
+                        let cf = cfgfile;
+                        let jc = null;
+                        try { eval("jc = " + fetch(cf) + ";"); } catch(e1) { jc = null; }
+                        if(jc && homeSource && homeSource.url){
+                            let still = false;
+                            let dl = [];
+                            try { eval("dl = " + fetch(jkfile) + ";"); } catch(e2) { dl = []; }
+                            for(let di = 0; di < dl.length; di++){
+                                if(dl[di] && dl[di].url == homeSource.url){ still = true; break; }
+                            }
+                            if(!still){
+                                delete jc['homeSource'];
+                                writeFile(cf, JSON.stringify(jc));
+                            }
+                        }
+                    } catch(e3) { }
+                    refreshPage(false);
+                    return "toast://已删除";
                 })
             },{
                 title: "编辑当前源",
@@ -860,9 +784,10 @@ function dianboyiji(testSource, dd) {
                     for(let j=0;j<importrecord.length;j++){
                         if(importrecord[j].scan==1&&importrecord[j].type=='4'){
                             log("开始扫描本地文件夹新增接口文件，目录>"+importrecord[j].url);
-                            newfiles = newfiles.concat(scanFolder(importrecord[j].url, 1));
+                            newfiles = newfiles.concat(scanFolder(importrecord[j].url, 1) || []);
                         }
                     }
+                    newfiles = newfiles.filter(function(v){ return typeof v == 'string' && /\.(js|py)$/i.test(v); });
                     
                     if(newfiles.length>0){
                         log("发现"+newfiles.length+"个本地接口文件");
@@ -902,7 +827,7 @@ function dianboyiji(testSource, dd) {
 
         d.push({
             title: "管理设置",
-            url: testSource?"toast://测试模式下不能进入设置菜单":$(getItem("sourceMode")=="2"?["外部资源导入","远程订阅模式√"]:["本地接口管理","本地解析管理","外部资源导入","聚影资源码订阅","本地接口模式√"],1).select(()=>{
+            url: testSource?"toast://测试模式下不能进入设置菜单":$(["本地接口管理","本地解析管理","外部资源导入"],1).select(()=>{
                 if(input=="本地接口管理"){
                     putMyVar('guanli','jk');
                     return $("hiker://empty#noRecordHistory##noHistory##noRefresh#").rule(() => {
@@ -922,23 +847,6 @@ function dianboyiji(testSource, dd) {
                         setPageTitle('外部资源导入');
                         require(config.聚影.replace(/[^/]*$/,'') + 'SrcJySet.js');
                         resource();
-                    })
-                }else if(input=="本地接口模式√"||input=="远程订阅模式√"){
-                    let sm;
-                    if(getItem("sourceMode")=="2"){
-                        clearItem("sourceMode");
-                        sm = "本地接口模式";
-                    }else{
-                        setItem("sourceMode","2");
-                        sm = "远程订阅模式";
-                    }
-                    refreshPage(true);
-                    return "toast://站源获取模式为："+sm;
-                }else if(input=="聚影资源码订阅"){
-                    return $('hiker://empty#noRecordHistory##noHistory#').rule(() => {
-                        require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
-                        setPageTitle("聚影资源码订阅管理");
-                        subResource();
                     })
                 }
             }),
@@ -1212,27 +1120,44 @@ function yiji() {
     if(MY_RULE.title=="聚影✓"){
         toast("此小程序已停用，请重新导入聚影");
     }
+    if(!getMyVar('Src_Jy_purge77')){
+        try { require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js'); } catch (eP0) { }
+        try {
+            var _jf = "hiker://files/rules/Src/Juying2/jiekou.json";
+            var _raw = fetch(_jf);
+            if (_raw) {
+                var _dl = JSON.parse(_raw);
+                if (_dl && _dl.length) {
+                    var _keep = [];
+                    for (var _i = 0; _i < _dl.length; _i++) {
+                        var _e = _dl[_i];
+                        var _u = String(_e.url || "");
+                        if (!_u || _u == "hiker://empty") { continue; }
+                        if (!_e.type && String(_e.name || "") == "empty") { continue; }
+                        _keep.push(_e);
+                    }
+                    if (_keep.length != _dl.length) { writeFile(_jf, JSON.stringify(_keep)); }
+                }
+            }
+        } catch (eP1) { }
+        putMyVar('Src_Jy_purge77', 1);
+    }
+
+    if(!getMyVar('Src_Jy_vchk77')){
+        putMyVar('Src_Jy_vchk77', 1);
+        putMyVar('Src_Jy_VersionCheck', '0');
+    }
     if(getMyVar('Src_Jy_VersionCheck', '0') == '0'){
-        let programversion = 0;
-        try{
-            programversion = $.require("config").version || MY_RULE.version || 0;
-        }catch(e){}
-        if(programversion<16){
-            confirm({
-                title: "温馨提示",
-                content: "发现小程序新版本",
-                confirm: $.toString(() => {
-                    try { jyCacheClear(); } catch (eCc) { }
-                    return fetch(jyRemoteBase() + "聚影.hiker");
-                }),
-                cancel: $.toString(() => {
-                    return "toast://不升级小程序，功能不全或有异常"
-                })
-            });
-        }
         Version();
         downloadFiles();//下载必要的依赖文件
         putMyVar('Src_Jy_VersionCheck', '1');
+        setItem('jy_verchk_ts', String(new Date().getTime()));
+    } else {
+        var _vts = parseInt(getItem('jy_verchk_ts', '0')) || 0;
+        if (new Date().getTime() > _vts + 6 * 60 * 60 * 1000) {
+            setItem('jy_verchk_ts', String(new Date().getTime()));
+            try { Version(); } catch (eV) { }
+        }
     }
 
     let d = [];
@@ -1253,11 +1178,16 @@ function yiji() {
         if($.type(storage0.getItem('buttonmenu5'))=="object"){
             setItem('buttonmenu5',storage0.getItem('buttonmenu5').name);
         }
-        let btnmn1 = getItem('buttonmenu1',"管理");
-        let btnmn2 = getItem('buttonmenu2',"收藏");
-        let btnmn3 = getItem('buttonmenu3',"点播");
-        let btnmn4 = getItem('buttonmenu4',"直播");
-        let btnmn5 = getItem('buttonmenu5',"云盘");
+        // 「分类」按钮已移除，老用户若存过会取到 undefined 崩溃，统一兜底
+        function _fixBtn(v, def) {
+            try { if (!v || !buttonmenu[v]) { return def; } } catch (eFB) { return def; }
+            return v;
+        }
+        let btnmn1 = _fixBtn(getItem('buttonmenu1',"管理"), "管理");
+        let btnmn2 = _fixBtn(getItem('buttonmenu2',"收藏"), "收藏");
+        let btnmn3 = _fixBtn(getItem('buttonmenu3',"点播"), "点播");
+        let btnmn4 = _fixBtn(getItem('buttonmenu4',"直播"), "直播");
+        let btnmn5 = _fixBtn(getItem('buttonmenu5',"云盘"), "云盘");
         let yijimenu = [
             {
                 title: btnmn1,
@@ -1416,6 +1346,7 @@ function yiji() {
                 }
             });
             let filterJk = getItem('主页搜索接口范围','');
+
             d.push({
                 title: "搜索",
                 url: $.toString((searchurl) => {
@@ -1644,14 +1575,12 @@ function yiji() {
         dianboyiji(null, d);
     }
 
-    if (MY_PAGE == 1 && JY_OWN && !jyCacheOk()) { try { jyCacheBuild(); } catch (eC) { } }
     // 一些自动检查调用在首页加载后，间隔24小时
     let nowtime = Date.now();
     let oldstartChecktime = parseInt(getItem('startChecktime','0').replace('time',''));
     if (!getMyVar('Src_Jy_startCheck') && nowtime > (oldstartChecktime+24*60*60*1000)) {
         setItem('startChecktime', nowtime+'time');//保存检查时间
         excludeLoadingItems(); //执行一些加载后的事项
-        updateResource(); //检查更新订阅资源码
         putMyVar('Src_Jy_startCheck', 1);
         log('执行首页加载后事项');
     }
@@ -1676,42 +1605,57 @@ function newSearch(name) {
     erjisousuo(name,'',undefined,'newSearch');
 }
 
-// 版本检测
+// 版本检测 -> 弹窗更新
 function Version() {
-    let loaclversion;
-    if(getItem('本地依赖库')=="1"){
-        let loaclfile = "hiker://files/data/"+MY_RULE.title+"/code/SrcTmplVersion.js";
-        if(fileExist(loaclfile)){
-            eval(fetch(loaclfile));
-            loaclversion = newVersion.SrcJuying;
-        }
+    var BUILD = 78;
+    var MY_RULE_VERSION = 0;
+    try { MY_RULE_VERSION = parseInt($.require("config").version) || 0; } catch (eMV) { MY_RULE_VERSION = 0; }
+    if (!MY_RULE_VERSION) { try { MY_RULE_VERSION = parseInt(MY_RULE.version) || 0; } catch (eMV2) { MY_RULE_VERSION = 0; } }
+    if (!MY_RULE_VERSION) { MY_RULE_VERSION = BUILD; }
+    var urls = ["https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy_version.json",
+        "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy_version.json",
+        "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy_version.json"];
+    var vJo = null;
+    for (var i = 0; i < urls.length; i++) {
+        var txt = "";
+        try { txt = request(urls[i], { timeout: 3000 }); } catch (e0) { }
+        if (!txt) { continue; }
+        try { var o = JSON.parse(String(txt)); if (o && o.build) { vJo = o; break; } } catch (e1) { }
     }
-    var nowVersion = loaclversion || getItem('Version', "0.1");//现在版本 
-    var nowtime = Date.now();
-    var oldtime = parseInt(getItem('VersionChecktime','0').replace('time',''));
-    if (nowtime > (oldtime+24*60*60*1000) && getItem("依赖","").startsWith("http") && getItem('本地依赖库','0')!="1") {
-        try {
-            eval(request(getItem("依赖","").replace(/[^/]*$/,'') + 'SrcTmplVersion.js'))
-            if (parseFloat(newVersion.SrcJuying) > parseFloat(nowVersion)) {
-                confirm({
-                    title:'发现新版本，是否更新？', 
-                    content:'本地V'+nowVersion+' => 云端V'+newVersion.SrcJuying + '\n' + (newVersion.hint||""), 
-                    confirm: $.toString((nowtime,version,updateRecords) => {
-                        setItem('Version', version);
-                        setItem('VersionChecktime', nowtime+'time');
-                        deleteCache();
-                        refreshPage();
-
-                        const hikerPop = $.require(config.聚影.replace(/[^/]*$/,'') + 'plugins/hikerPop.js');
-                        hikerPop.updateRecordsBottom(updateRecords);
-                    },nowtime, newVersion.SrcJuying, newVersion.JYUpdateRecords.slice(0, 3)),
-                    cancel:''
-                })
-                log('检测到新版本！\nV'+newVersion.SrcJuying+'版本》'+newVersion.SrcJuyingdesc[newVersion.SrcJuying]);
+    if (!vJo) { return; }
+    var rBuild = parseInt(vJo.build) || 0;
+    var rV = parseInt(vJo.version || vJo.v) || 0;
+    if (rBuild > BUILD) {
+        var _p = String(vJo.url || "");
+        if (_p.indexOf("http") !== 0) { _p = "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt"; }
+        var _dl = $.toString(function (U1) {
+            var _rawList = [U1,
+                "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
+                "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt"];
+            var _u = [];
+            for (var z = 0; z < _rawList.length; z++) {
+                var _uu = String(_rawList[z] || "");
+                if (_uu && _uu.indexOf("http") === 0 && _u.indexOf(_uu) < 0) { _u.push(_uu); }
             }
-            putMyVar('Src_Jy_Version', '-V'+newVersion.SrcJuying);
-        } catch (e) { }
-    }else{
-        putMyVar('Src_Jy_Version', '-V'+nowVersion);
+            var _err = "";
+            for (var k = 0; k < _u.length; k++) {
+                try {
+                    toast("正在下载更新(" + (k + 1) + "/" + _u.length + ")，约900KB请稍候…");
+                    var t = request(_u[k], { timeout: 60000 });
+                    if (!t) { _err = "连接失败"; continue; }
+                    var _ts = String(t);
+                    if (_ts.indexOf("base64://@") < 0 || _ts.length < 600000) { _err = "内容不完整"; continue; }
+                    return fetch(_u[k]);
+                } catch (fe) { _err = (fe && fe.message) ? fe.message : "失败"; }
+            }
+            toast("更新失败：" + (_err || "网络不可用") + "，请换网络后重试");
+            return "hiker://empty";
+        });
+        confirm({
+            title: "⬆️ 发现新版本 v" + rV,
+            content: String(vJo.note || "有更新") + "\n\n当前版本：v" + MY_RULE_VERSION + "（BUILD " + BUILD + "）\n发布时间：" + String(vJo.time || "") + "\n\n点确定立即下载安装。",
+            confirm: _dl,
+            cancel: _dl
+        });
     }
 }

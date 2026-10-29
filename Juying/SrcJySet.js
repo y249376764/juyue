@@ -25,7 +25,7 @@ function SRCSet() {
                 jiexi();
             }
         }, guanliType),
-        img: getIcon("点播-接口增加.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/25.png",
+        img: getIcon("点播-接口增加.svg"),//"https://hikerfans.com/tubiao/more/25.png",
         col_type: "icon_small_4"
     });
     d.push({
@@ -68,22 +68,23 @@ function SRCSet() {
                 return "toast://"+sm;
             }
         }),
-        img: getIcon("点播-接口操作.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/290.png",
+        img: getIcon("点播-接口操作.svg"),//"https://hikerfans.com/tubiao/more/290.png",
         col_type: "icon_small_4"
     });
     d.push({
         title: '导入',
-        url: $("","聚影口令").input(()=>{
+        url: $("","粘贴聚影口令 / 接口配置 / 采集源 / 链接").input(()=>{
             if(input==""){
                 return 'toast://不能为空';
             }
-            if(input.indexOf('@import=js:')>-1){
-                input = input.split('@import=js:')[0].replace('云口令：','').trim();
+            let t = String(input);
+            if(t.indexOf('@import=js:')>-1){
+                t = t.split('@import=js:')[0].replace('云口令：','').trim();
             }
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJySet.js');
-            return JYimport(input);
+            return _jyAutoImport(t);
         }),
-        img: getIcon("点播-接口导入.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/43.png",
+        img: getIcon("点播-接口导入.svg"),//"https://hikerfans.com/tubiao/more/43.png",
         col_type: "icon_small_4"
     });
     let pastes = getPastes();
@@ -113,7 +114,7 @@ function SRCSet() {
             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJySet.js');
             return JYshare(lx, input);
         }, guanliType),
-        img: getIcon("点播-接口分享.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/3.png",
+        img: getIcon("点播-接口分享.svg"),//"https://hikerfans.com/tubiao/more/3.png",
         col_type: "icon_small_4",
         extra: {
             longClick: [{
@@ -930,8 +931,11 @@ function jiekousave(urls, mode) {
                 it.url = it.url.replace('?ac=list','').replace('/vod?','/vod');//修正一下cms奇怪链接
             }
 
+            // ★ 原判据只看 url：配置里多个站点共用同一个采集 api（名字不同）时，
+            //   只导入第一个 -> 用户感觉"识别源数量不对"。
+            //   改成"同名同址"才算重复，不同名的同名址源都能进。
             function checkitem(item) {
-                return item.url==it.url;
+                return item.url==it.url && String(item.name)===String(it.name);
             }
             
             if(!datalist.some(checkitem)&&it.name&&it.url&&it.type){
@@ -1710,7 +1714,7 @@ function resource() {
             return "toast://支持本地包或在线的tvBox接口配置地址";
         })
     });
-    if(getItem("sourceMode","1")=="1"){
+    if(true){
         /*
         d.push({
             title: (importtype=="2"?"👉":"")+"道长hipy库导入",
@@ -1746,13 +1750,7 @@ function resource() {
     }
 
     if(importtype=="1"){
-        if(getItem("sourceMode")=="2"){
-            d.push({
-                title: '当前订阅地址：' + (Juconfig['dySource'] || "无"),
-                col_type: "rich_text",
-                extra:{textSize:12}
-            });
-        }else{
+        {
             d.push({
                 title: '选择需要的导入项目',
                 col_type: "rich_text",
@@ -1811,11 +1809,20 @@ function resource() {
     });
 
     d.push({
-        title: '🆗 '+(importtype=="4"?'确定扫描':getItem("sourceMode")=="2"?'确定订阅':'确定导入(' + (Juconfig["importmode"]?"全量":"增量")+')'),
-        url: importtype=="1"&&getItem("sourceMode","1")=="1"&&getMyVar('importjiekou','1')!="1"&&getMyVar('importjiexi','1')!="1"?'toast://请选择导入项目':$('#noLoading#').lazyRule((Juconfig,cfgfile) => {
+        title: '🆗 '+(importtype=="4"?'确定扫描':'确定导入(' + (Juconfig["importmode"]?"全量":"增量")+')'),
+        url: importtype=="1"&&getMyVar('importjiekou','1')!="1"&&getMyVar('importjiexi','1')!="1"?'toast://请选择导入项目':$('#noLoading#').lazyRule((Juconfig,cfgfile) => {
                 let importtype = getMyVar('importtype','1');
 
                 let input = getMyVar('importinput', '').trim();
+                // ★ 云口令直接粘贴导入
+                //   原校验只放行 / http file hiker 开头的"链接"，
+                //   而云口令形如「聚影接口￥xxxx￥xxx」以「聚」开头 -> 被判"非正常链接"拒掉
+                //   所以粘贴口令永远导不进来（除非走 .hiker 文件的 @import 通道，
+                //   而那个通道又硬编码规则名"聚影"，改名后也失效）
+                //   这里在链接校验【之前】先识别口令，直接交给 JYimport 处理
+                if(input.indexOf('￥') > -1 || /^云口令：/.test(input)){
+                    return JYimport(input);
+                }
                 if(input=="" || input.endsWith("Juying.js")){
                     return 'toast://输入不能为空、代码库地址';
                 }else if(!(input.startsWith('/') || input.startsWith('http') || input.startsWith('file') || input.startsWith('hiker'))){
@@ -1848,11 +1855,7 @@ function resource() {
                 function exeImport(input){
                     let importtype = getMyVar('importtype','1');
                     if(importtype=="1"){
-                        if(getItem("sourceMode")=="2"){
-                            return "toast://" + getBoxSource(input, 3).message;
-                        }else{
-                            return Resourceimport(input, '1', Juconfig['importmode']?2:0);
-                        }
+                        return Resourceimport(input, '1', Juconfig['importmode']?2:0);
                     }else if(importtype=="2"){
                         return HipyImport(input, Juconfig['importmode']?2:0);
                     }
@@ -2187,6 +2190,155 @@ function JYshare(lx,input,data) {
     }
 }
 //资源导入
+
+// ===== 兼容导入（移植自星集）：一条文本自动识别格式并导入 =====
+// 支持：api_site 配置 / TVBox sites 采集源(xml) / CatVod-JS / Drpy / var Rule 规则 / 聚影口令
+function _jyFetchAny(u) {
+    let url = String(u || '').trim();
+    if (!/^https?:\/\//i.test(url)) { url = 'https://' + url.replace(/^\/+/, ''); }
+    let mb = null;
+    try { mb = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/); } catch (eM) { }
+    if (mb) { url = 'https://raw.githubusercontent.com/' + mb[1] + '/' + mb[2] + '/' + mb[3] + '/' + mb[4]; }
+    let got = '';
+    try { got = String(fetch(url, { timeout: 15000 }) || ''); } catch (e1) { got = ''; }
+    if (!got && /raw\.githubusercontent\.com/i.test(url)) {
+        try { got = String(fetch('https://gh-proxy.com/' + url, { timeout: 15000 }) || ''); } catch (e2) { got = ''; }
+        if (!got) {
+            try { got = String(fetch(url.replace('raw.githubusercontent.com', 'cdn.jsdelivr.net/gh').replace('/gh/', '/gh/'), { timeout: 15000 }) || ''); } catch (e3) { got = ''; }
+        }
+    }
+    return got;
+}
+
+function _jyIsCatVod(code) {
+    let c = String(code || '');
+    if (!c) { return false; }
+    return /(let\s+)?(var\s+)?(globalThis\.)?(rule|Rule)\s*=/.test(c) || /getHomeContent|homeContent|categoryContent|detailContent/.test(c);
+}
+
+function _jyAutoImport(raw) {
+    let t = String(raw || '').replace(/^\uFEFF/, '').trim();
+    if (!t) { return '内容为空'; }
+    if (t.length > 4000000) { return '内容太大（' + Math.round(t.length / 1024) + 'KB），请分开导入'; }
+
+    // 0) 聚影口令：原样交给 JYimport
+    if (/^云?口令/.test(t) || /聚影(接口|解析|资源码)￥/.test(t) || /￥[A-Za-z0-9+\/=]{16,}￥/.test(t)) {
+        return JYimport(t);
+    }
+
+    // 1) 纯链接 → 先抓内容
+    let isLink = /^https?:\/\//i.test(t) && !/[\r\n]/.test(t);
+    if (isLink) {
+        let got = _jyFetchAny(t);
+        if (!got) { return '链接取不到内容'; }
+        t = String(got).replace(/^\uFEFF/, '').trim();
+        if (t.length > 4000000) { return '下载内容太大（' + Math.round(t.length / 1024) + 'KB）'; }
+    }
+
+    if (/^\s*<!DOCTYPE|<html[\s>]|<meta\s|<body[\s>]/i.test(t)) {
+        return '这是网页不是配置，请填 JSON 原始地址';
+    }
+
+    // 2) TVBox sites 采集源
+    let cfgObj = null;
+    try { cfgObj = JSON.parse(t); } catch (eP) { cfgObj = null; }
+    if (!cfgObj) {
+        try {
+            let mv = t.match(/var\s+\w+\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+            if (mv) { cfgObj = JSON.parse(mv[1]); }
+        } catch (eP2) { cfgObj = null; }
+    }
+    if (cfgObj && cfgObj.sites && cfgObj.sites.length) {
+        let xmlSites = [], catvodSites = [], drpySites = [], skipped = 0;
+        for (let i = 0; i < cfgObj.sites.length; i++) {
+            let ss = cfgObj.sites[i];
+            if (!ss || !ss.name || !ss.api) { skipped++; continue; }
+            let api = String(ss.api).trim();
+            let stype = (ss.type !== undefined) ? ss.type : 3;
+            let isXml = (stype === 1 || stype === 4) && /^https?:\/\//i.test(api);
+            let isDrpy = stype === 3 && /drpy/i.test(api);
+            let isJs = stype === 3 && /\.js(\?|$)/i.test(api) && /^https?:\/\//i.test(api);
+            if (isXml) {
+                xmlSites.push({ name: String(ss.name).trim(), url: api, type: 'cms', group: '导入', searchable: 1, quickSearch: 1, filterable: 1 });
+            } else if (isJs) {
+                let code = '';
+                try { code = _jyFetchAny(api); } catch (eC) { code = ''; }
+                if (_jyIsCatVod(code) && !/drpy/i.test(api)) {
+                    catvodSites.push({ name: String(ss.name).trim(), code: code, key: ss.key || ss.name });
+                } else if (isDrpy) {
+                    drpySites.push(String(ss.name).trim());
+                } else {
+                    skipped++;
+                }
+            } else {
+                skipped++;
+            }
+        }
+        let saved = 0;
+        if (xmlSites.length) { saved = jiekousave(xmlSites, 0); }
+        let msg = '采集源 ' + xmlSites.length + ' 个' + (saved ? '（新增 ' + saved + '）' : '');
+        if (catvodSites.length) {
+            let dir = jkfile.replace(/[^\/]*$/, '') + 'js/';
+            let okJs = 0;
+            for (let k = 0; k < catvodSites.length; k++) {
+                try {
+                    let fn = catvodSites[k].key.replace(/[^\w\u4e00-\u9fa5.-]/g, '_');
+                    let target = dir + fn + '.js';
+                    writeFile(target, catvodSites[k].code);
+                    if (fileExist(target)) { okJs++; }
+                } catch (eW) { }
+            }
+            let jsList = [];
+            for (let k2 = 0; k2 < catvodSites.length; k2++) {
+                let fn2 = catvodSites[k2].key.replace(/[^\w\u4e00-\u9fa5.-]/g, '_');
+                jsList.push({ name: catvodSites[k2].name, url: dir + fn2 + '.js', type: 'hipy_t3', group: '导入', searchable: 1, quickSearch: 1, filterable: 1 });
+            }
+            let okSave = jiekousave(jsList, 0);
+            msg += '，JS 源 ' + okJs + ' 个（保存 ' + okSave + '）';
+        }
+        if (drpySites.length) { msg += '，Drpy 跳过 ' + drpySites.length + ' 个（聚影不支持 drpy 引擎）'; }
+        if (!xmlSites.length && !catvodSites.length) {
+            return '没有可导入的源' + (skipped ? '（跳过 ' + skipped + '）' : '') + '；聚影只支持 xml 采集源和 CatVod JS 源';
+        }
+        return msg;
+    }
+
+    // 3) api_site 配置
+    let apiSite = null;
+    let parsed = null;
+    try { parsed = JSON.parse(t); } catch (eA) { parsed = null; }
+    if (!parsed) {
+        try {
+            let mv3 = t.match(/var\s+\w+\s*=\s*(\[[\s\S]*\])\s*;?\s*$/);
+            if (mv3) { parsed = JSON.parse(mv3[1]); }
+        } catch (eA2) { parsed = null; }
+    }
+    if (parsed) {
+        if (Array.isArray(parsed)) {
+            for (let i = 0; i < parsed.length; i++) { if (parsed[i] && parsed[i].api_site) { apiSite = parsed[i].api_site; break; } }
+        } else if (parsed.api_site) { apiSite = parsed.api_site; }
+    }
+    if (apiSite && typeof apiSite === 'object') {
+        let list = [];
+        for (let k in apiSite) {
+            if (!Object.prototype.hasOwnProperty.call(apiSite, k)) { continue; }
+            let api = String((apiSite[k] && apiSite[k].api) || '').trim();
+            if (!api) { continue; }
+            list.push({ name: String((apiSite[k] && apiSite[k].name) || k).trim(), url: api, type: 'cms', group: '导入', searchable: 1, quickSearch: 1, filterable: 1 });
+        }
+        if (!list.length) { return 'api_site 里没有可用地址'; }
+        let n = jiekousave(list, 0);
+        return 'api_site 识别 ' + list.length + ' 个，新增 ' + n + ' 站';
+    }
+
+    // 4) var Rule 规则 → 聚影不支持，明确告知
+    if (/var\s+(Rule|parse)\s*=/.test(t)) {
+        return '这是海阔解析规则，请到「海阔→我的→规则」导入';
+    }
+
+    return '无法识别的格式（支持：api_site / TVBox sites 采集源 / 聚影口令）';
+}
+
 function JYimport(input) {
     let cloudimport;
     if(/^云口令：/.test(input)){
@@ -2228,6 +2380,13 @@ function JYimport(input) {
             hideLoading();
         }else{
             text = pasteurl;
+        }
+        // ★ 原来取失败时什么都不做（无 toast、页面空白），用户以为"点了没反应"
+        if(!pasteurl){
+            return "toast://聚影：口令解密为空，口令可能已损坏";
+        }
+        if(/^error/.test(String(text)) || !text){
+            return "toast://聚影：剪贴板取不到内容（多半已过期）；" + String(text||'').substring(0,60);
         }
         if(pasteurl&&!/^error/.test(text)){
             let gzip = $.require(codepath + "plugins/gzip.js");
@@ -2425,7 +2584,7 @@ function yundiskjiekou() {
         url: $('hiker://empty#noRecordHistory##noHistory#').rule((filepath,yundiskapi) => {
             yundiskapi(filepath);
         },filepath,yundiskapi),
-        img: getIcon("云盘-接口增加.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/25.png",
+        img: getIcon("云盘-接口增加.svg"),//"https://hikerfans.com/tubiao/more/25.png",
         col_type: "icon_small_3"
     });
     d.push({
@@ -2453,7 +2612,7 @@ function yundiskjiekou() {
                 return "toast://聚影：口令有误";
             }
         }),
-        img: getIcon("云盘-接口导入.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/43.png",
+        img: getIcon("云盘-接口导入.svg"),//"https://hikerfans.com/tubiao/more/43.png",
         col_type: "icon_small_3"
     });
     d.push({
@@ -2469,7 +2628,7 @@ function yundiskjiekou() {
                 return "toast://分享失败，剪粘板或网络异常";
             }
         }, datalist),
-        img: getIcon("云盘-接口分享.svg"),//"https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/3.png",
+        img: getIcon("云盘-接口分享.svg"),//"https://hikerfans.com/tubiao/more/3.png",
         col_type: "icon_small_3",
         extra: {
             longClick: [{
@@ -2775,6 +2934,13 @@ function importConfirm(jsfile) {
         lx = "jk";
     }
     if(name!="聚影资源码"){
+        importdatas = (importdatas||[]).filter(function(it){
+            if(!it) { return false; }
+            var _u = String(it.url||"");
+            if(!_u || _u=="hiker://empty") { return false; }
+            if(String(it.name||"")=="empty" && !it.type) { return false; }
+            return true;
+        });
         //获取现有接口
         datalist = [];
         let sourcefile = getFile(lx);

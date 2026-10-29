@@ -1,3 +1,148 @@
+// ★ 音频判定（定义在 AliPublic 是因为 lazyRule 回调是独立上下文，
+//   只 require 本文件，回调里读不到 SrcJyAliDisk 顶层的函数）：不能只信阿里云盘的 category
+//   阿里云盘对 .wma / .ape / .amr 等冷门音频会归成 doc/others，不是 audio
+//   -> 只判 category=="audio" 会让这些格式落到 download:// 分支（下载而非播放）
+//   所以补一层扩展名兜底
+var AUDIO_EXTS = /\.(mp3|m4a|flac|wav|aac|ogg|oga|opus|ape|wma|amr|aiff|aif|mka|mid|midi|ra|au|ac3|dts|wv|tta|mpc|shn|alac)$/i;
+function isAudioFile(category, name) {
+    if (category == "audio") { return true; }
+    if (!name) { return false; }
+    return AUDIO_EXTS.test(String(name));
+}
+
+// ★★★ aliOpenPlayUrl 在聚影源码里【只有调用、没有定义】
+//   SrcJyAliDisk.js 两处调用它（音频/图片/其他文件的取直链），但本仓库版本里找不到定义
+//   -> 音频分支必然 ReferenceError -> 播不出来（视频走 getAliUrl 分支不受影响，所以"视频正常音乐不行"）
+//   这里照「云盘君」的做法补齐：调阿里云盘取【下载直链】（openFile/getDownloadUrl 同族）
+//   云盘君音频用的就是下载直链 + 裸 URL（不加 Referer），已验证能播
+function aliOpenPlayUrl(file_id, sharedata, drive_id) {
+    var _hd = {};
+    try {
+        for (var k in headers) { _hd[k] = headers[k]; }
+    } catch (eH) { }
+    var _body = { file_id: file_id };
+    var _url = '';
+    try {
+        if (sharedata && sharedata.sharetoken) {
+            // 共享链接模式
+            if (sharedata.share_id) { _body.share_id = sharedata.share_id; }
+            _hd['x-share-token'] = sharedata.sharetoken;
+            _url = 'https://api.aliyundrive.com/v2/file/get_download_url';
+        } else {
+            // 我的云盘模式
+            _body.drive_id = drive_id || (typeof alidrive_id !== 'undefined' ? alidrive_id : '');
+            if (typeof authorization !== 'undefined' && authorization) {
+                _hd['authorization'] = authorization;
+            }
+            _url = 'https://api.aliyundrive.com/v2/file/get_download_url';
+        }
+        var _res = String(request(_url, { method: 'POST', headers: _hd, body: _body, timeout: 10000 }));
+        var _jo = null;
+        try { _jo = JSON.parse(_res); } catch (eP) { _jo = null; }
+        if (_jo && _jo.url) { return _jo.url; }
+        if (_jo && (_jo.code || _jo.message)) {
+            log('aliOpenPlayUrl 失败: ' + _jo.code + ':' + _jo.message);
+        }
+    } catch (e) {
+        log('aliOpenPlayUrl 异常: ' + e.message);
+    }
+    return '';
+}
+
+
+// ===== 补齐聚影源码里"只有调用没有定义"的阿里云盘函数 =====
+// 扫描发现：getAliUrl / aliMyPlayUrl / getSubtitle / getOpenToken / createsession
+// 在整份源码里都找不到定义（SrcJyAliPublic.js 只有 213 行 6 个函数，明显是裁剪版）。
+// 这里照阿里云盘官方 API 补齐，保证调用不崩。
+
+function _aliPost(url, body, extraHeaders) {
+    var hd = {};
+    try { for (var k in headers) { hd[k] = headers[k]; } } catch (e) { }
+    if (extraHeaders) { for (var k2 in extraHeaders) { hd[k2] = extraHeaders[k2]; } }
+    var res = String(request(url, { method: 'POST', headers: hd, body: body, timeout: 15000 }));
+    try { return JSON.parse(res); } catch (e2) { return null; }
+}
+
+// 取视频播放信息（多清晰度）
+function _aliPreviewPlayInfo(file_id, drive_id, share_id, share_token) {
+    var body = { file_id: file_id };
+    var hd = {};
+    if (share_id && share_token) {
+        body.share_id = share_id;
+        hd['x-share-token'] = share_token;
+    } else {
+        body.drive_id = drive_id || (typeof alidrive_id !== 'undefined' ? alidrive_id : '');
+        if (typeof authorization !== 'undefined' && authorization) { hd['authorization'] = authorization; }
+    }
+    var jo = _aliPost('https://api.aliyundrive.com/adrive/v3/file/get_video_preview_play_info', body, hd);
+    if (!jo) { return null; }
+    if (jo.code) { log('预览播放失败: ' + jo.code + ':' + jo.message); return null; }
+    var out = { urls: [] };
+    var list = (jo.video_preview_play_info && jo.video_preview_play_info.live_transcoding_task_list) || [];
+    for (var i = 0; i < list.length; i++) {
+        var it = list[i];
+        if (it && it.url) {
+            out.urls.push({
+                name: (typeof transcoding !== 'undefined' && transcoding[it.template_id]) ? transcoding[it.template_id] : (it.template_id || ('线路' + (i + 1))),
+                url: it.url
+            });
+        }
+    }
+    if (out.urls.length === 0) { return null; }
+    return out;
+}
+
+// 共享链接视频播放（视频分支调用）
+function getAliUrl(share_id, file_id, share_pwd) {
+    try {
+        var st = '';
+        try { st = (sharedataGlobal && sharedataGlobal.sharetoken) ? sharedataGlobal.sharetoken : String(getMyVar('Src_Jy_sharetoken', '') || ''); } catch (e) { st = ''; }
+        if (!st) { try { st = String(getMyVar('Src_Jy_sharetoken_' + share_id, '') || ''); } catch (e2) { } }
+        var r = _aliPreviewPlayInfo(file_id, '', share_id, st);
+        if (r) { return r; }
+    } catch (e3) { log('getAliUrl 异常: ' + e3.message); }
+    return { urls: [] };
+}
+
+// 我的云盘视频播放
+function aliMyPlayUrl(file_id, drive_id) {
+    try {
+        var r = _aliPreviewPlayInfo(file_id, drive_id, '', '');
+        if (r) { return r; }
+    } catch (e) { log('aliMyPlayUrl 异常: ' + e.message); }
+    return { message: '获取播放列表失败，请重新登录云盘后重试' };
+}
+
+// 字幕
+function getSubtitle(share_id, sub_file_id, share_pwd) {
+    try {
+        var u = '';
+        try { u = aliOpenPlayUrl(sub_file_id, { share_id: share_id, sharetoken: String(getMyVar('Src_Jy_sharetoken', '') || '') }); } catch (e) { u = ''; }
+        if (u) { return String(fetch(u)); }
+    } catch (e2) { }
+    return '';
+}
+
+// openness token
+function getOpenToken() {
+    try {
+        if (typeof aliOpenTokenObj !== 'undefined' && aliOpenTokenObj && aliOpenTokenObj.access_token) {
+            return aliOpenTokenObj.access_token;
+        }
+        if (typeof aliconfig !== 'undefined' && aliconfig.opentoken) { return aliconfig.opentoken; }
+    } catch (e) { }
+    return '';
+}
+
+// 创建会话（部分流程调用）
+function createsession() {
+    try {
+        var jo = _aliPost('https://api.aliyundrive.com/users/v1/users/device/create_session', { device_id: '' }, {});
+        if (jo && jo.credential) { return jo; }
+    } catch (e) { }
+    return null;
+}
+
 //本代码仅用于个人学习，请勿用于其他作用，下载后请24小时内删除，代码虽然是公开学习的，但请尊重作者，应留下说明
 require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
 //Ali公用文件

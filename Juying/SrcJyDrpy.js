@@ -200,8 +200,36 @@ function createDrpy(sdata) {
             return $toString.apply(this).trim();
         };
         //let {GM} = $.require("http://hiker.nokia.press/hikerule/rulelist.json?id=6916&auth=1d35e8f0-22e8-5270-a9d1-826f53f177ad");
-        //$.require.cache.delete($.require.resolve(codePath +'drpy/drpy2.js'));
-        let drpy2 = $.require(codePath +'drpy/drpy2.js');
+        // ★ 防御式加载：清缓存后加载，并校验 init 是否真的拿到
+        //   原写法 $.require 拿到什么就直接用，一旦返回 {} 或 undefined，
+        //   后面 drpy.init() 才报"找不到函数 init"，现象和文件缺失一模一样，极难排查
+        let drpy2 = null;
+        function _loadDrpy() {
+            try { return $.require(codePath + 'drpy/drpy2.js'); } catch (eL) { return null; }
+        }
+        try { $.require.cache.delete($.require.resolve(codePath + 'drpy/drpy2.js')); } catch (eC) { }
+        drpy2 = _loadDrpy();
+        if (!drpy2 || typeof drpy2.init !== 'function') {
+            // 再试一次（有些版本 require 有缓存/竞态）
+            try { $.require.cache.delete($.require.resolve(codePath + 'drpy/drpy2.js')); } catch (eC2) { }
+            drpy2 = _loadDrpy();
+        }
+        if (!drpy2 || typeof drpy2.init !== 'function') {
+            // 兜底：有些环境 require 返回的是 {default: {...}}
+            try {
+                let _r = $.require(codePath + 'drpy/drpy2.js');
+                if (_r && _r.default && typeof _r.default.init === 'function') { drpy2 = _r.default; }
+            } catch (eD) { }
+        }
+        // ★ 加载失败【不要】放进缓存
+        //   原来无条件 put，坏对象（{}）被塞进 GM/drpyMap，
+        //   于是第一次报"找不到函数 init"，刷新后从缓存取出同一个坏对象
+        //   改成调 getRule() 就报"找不到函数 getRule" —— 两个报错行号不同就是这么来的
+        if (!drpy2 || typeof drpy2.init !== 'function') {
+            log('drpy2 引擎加载失败：' + codePath + 'drpy/drpy2.js 未取到 init');
+            try { drpyMap.delete(sdata.key); } catch (eDel) { }
+            return;
+        }
         GM.has(GMkey, (DrpyManage) => {
             DrpyManage.put(sdata.key, drpy2);
         });
@@ -211,6 +239,10 @@ function createDrpy(sdata) {
 function createNewDrpy(sdata) {
     createDrpy(sdata);
     let drpy = drpyMap.get(sdata.key);
+    // ★ 取出来先校验，坏了就抛明确错误，不要让 init 裸崩
+    if (!drpy || typeof drpy.init !== 'function') {
+        throw new Error('drpy2 引擎未就绪（init 缺失），hipy_t3 源无法运行；请确认 hiker://files/rules/Src/Juying2/drpy/drpy2.js 是 ES5 版');
+    }
     drpy.init(sdata.ext);
     //log(sdata.key + ">init");
     return drpy;
@@ -255,11 +287,16 @@ function get(jkdata) {
         if (drpyMap.has(key)) {
             //log("取缓存>" + key)
             let drpy = drpyMap.get(key);
-            if(Object.keys(drpy.getRule()).length > 0){
-                return drpy;
-            }else{
-                drpyMap.delete(key);
+            // ★ 原写法直接 drpy.getRule()，坏对象缓存进来后这里裸崩
+            //   （"找不到函数 getRule"）——先校验再调用
+            if(drpy && typeof drpy.getRule === 'function' && typeof drpy.init === 'function') {
+                try {
+                    if(Object.keys(drpy.getRule()).length > 0){
+                        return drpy;
+                    }
+                } catch (eGR) { }
             }
+            drpyMap.delete(key);
         }
         if (drpyMap.size >= 16) {
             //log("删缓存>"+Array.from(drpyMap.keys()).at(0))

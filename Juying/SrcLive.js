@@ -469,7 +469,7 @@ function LiveSet() {
             var d = [];
             d.push({
                 title: '‘‘’’<b>📺 订阅源管理</b> &nbsp &nbsp <small>添加自定义链接</small>',
-                img: "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/img/live.png",
+                img: "https://img.vinua.cn/images/QqyC.png",
                 url: $("", "输入通用格式的tv链接地址").input((livecfgfile, liveconfig) => {
                     if (input) {
                         if (/\/storage\/emulated\//.test(input)) { input = "file://" + input }

@@ -269,7 +269,7 @@ function aliShare(share_id, folder_id, share_pwd) {
                     let filesize = item.size / 1024 / 1024;
                     let it = {
                         title: item.name,
-                        img: item.thumbnail || (item.category == "video" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/movie/13.svg" : item.category == "audio" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/music/46.svg" : item.category == "image" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/38.png" : "https://img.alicdn.com/imgextra/i1/O1CN01mhaPJ21R0UC8s9oik_!!6000000002049-2-tps-80-80.png"),
+                        img: item.thumbnail || (item.category == "video" ? "http://123.56.105.145/tubiao/movie/13.svg" : item.category == "audio" ? "http://123.56.105.145/tubiao/music/46.svg" : item.category == "image" ? "http://123.56.105.145/tubiao/more/38.png" : "https://img.alicdn.com/imgextra/i1/O1CN01mhaPJ21R0UC8s9oik_!!6000000002049-2-tps-80-80.png"),
                         desc: filesize < 1024 ? filesize.toFixed(2) + 'MB' : (filesize / 1024).toFixed(2) + 'GB',
                         col_type: style,
                         extra: {
@@ -323,17 +323,23 @@ function aliShare(share_id, folder_id, share_pwd) {
                         }, item.share_id, item.file_id, sub_file_id || "", share_pwd);
                         d.push(it);
                     } else {
-                        it.url = $("").lazyRule((category, file_id, sharedata) => {
+                        it.url = $("").lazyRule((category, file_id, sharedata, item_name) => {
                             require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyAliPublic.js');
-                            let file_url = aliOpenPlayUrl(file_id, sharedata);
-                            if (category == "audio") {
-                                return file_url + ";{Referer@https://www.aliyundrive.com/}#isMusic=true#";
+                            let file_url = '';
+                            try { file_url = aliOpenPlayUrl(file_id, sharedata); } catch (eU) { file_url = ''; }
+                            if (isAudioFile(category, item_name)) {
+                                // ★ 音频：裸 URL + #isMusic=true#，不加 ;{Referer@}
+                                //   海阔播放器解析 ';{...}' 时尾部 '#isMusic=true#' 会污染 header
+                                //   -> Referer 变成 'https://...}#isMusic=true' -> 阿里云盘拒绝 -> 播不出
+                                //   「云盘君」用裸 URL 能播，照抄
+                                if (!file_url) { return "toast://音频直链获取失败，请重新登录云盘后重试"; }
+                                return file_url + "#isMusic=true#";
                             } else if (category == "image") {
                                 return file_url + "#.jpg@Referer=https://www.aliyundrive.com/";
                             } else {
                                 return "download://" + file_url + ";{Referer@https://www.aliyundrive.com/}";
                             }
-                        }, item.category, item.file_id, { sharetoken: sharetoken, share_id: item.share_id });
+                        }, item.category, item.file_id, { sharetoken: sharetoken, share_id: item.share_id }, item.name || "");
                         filterFiles.push(it);
                     }
                 })
@@ -943,8 +949,8 @@ function aliMyDisk(folder_id, isSearch, drive_id) {
                             let filesize = item.size / 1024 / 1024;
                             d.push({
                                 title: item.name,
-                                img: item.thumbnail ? item.thumbnail + "@Referer=https://www.aliyundrive.com/" : item.category == "video" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/movie/13.svg" : item.category == "audio" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/music/46.svg" : item.category == "image" ? "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/more/38.png" : "https://img.alicdn.com/imgextra/i1/O1CN01mhaPJ21R0UC8s9oik_!!6000000002049-2-tps-80-80.png@Referer=",
-                                url: $("hiker://empty##").lazyRule((category, file_id, sub_file_url,drive_id) => {
+                                img: item.thumbnail ? item.thumbnail + "@Referer=https://www.aliyundrive.com/" : item.category == "video" ? "http://123.56.105.145/tubiao/movie/13.svg" : item.category == "audio" ? "http://123.56.105.145/tubiao/music/46.svg" : item.category == "image" ? "http://123.56.105.145/tubiao/more/38.png" : "https://img.alicdn.com/imgextra/i1/O1CN01mhaPJ21R0UC8s9oik_!!6000000002049-2-tps-80-80.png@Referer=",
+                                url: $("hiker://empty##").lazyRule((category, file_id, sub_file_url,drive_id, item_name) => {
                                     require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyAliPublic.js');
                                     if(!alitoken){
                                         return "toast://未获取到阿里token，重新登录偿试";
@@ -964,16 +970,19 @@ function aliMyDisk(folder_id, isSearch, drive_id) {
                                             return "toast://" + play.message;
                                         }
                                     } else {
-                                        let file_url = aliOpenPlayUrl(file_id, undefined, drive_id);
-                                        if (category == "audio") {
-                                            return file_url + ";{Referer@https://www.aliyundrive.com/}#isMusic=true#";
+                                        let file_url = '';
+                                        try { file_url = aliOpenPlayUrl(file_id, undefined, drive_id); } catch (eU2) { file_url = ''; }
+                                        if (isAudioFile(category, item_name)) {
+                                            // ★ 音频：裸 URL + #isMusic=true#（同共享链接处）
+                                            if (!file_url) { return "toast://音频直链获取失败，请重新登录云盘后重试"; }
+                                            return file_url + "#isMusic=true#";
                                         } else if (category == "image") {
                                             return file_url + "#.jpg@Referer=https://www.aliyundrive.com/";
                                         } else {
                                             return "download://" + file_url + ";{Referer@https://www.aliyundrive.com/}";
                                         }
                                     }
-                                }, item.category, item.file_id, sub_file_url || "", drive_id),
+                                }, item.category, item.file_id, sub_file_url || "", drive_id, item.name || ""),
                                 desc: filesize < 1024 ? filesize.toFixed(2) + 'MB' : (filesize / 1024).toFixed(2) + 'GB',
                                 col_type: style,
                                 extra: {
@@ -1575,7 +1584,7 @@ function erjiAliShare(share_id, folder_id, share_pwd) {
                             let filesize = item.size / 1024 / 1024;
                             let it = {
                                 title: item.name,
-                                img: item.thumbnail || "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/movie/13.svg",
+                                img: item.thumbnail || "http://123.56.105.145/tubiao/movie/13.svg",
                                 desc: filesize < 1024 ? filesize.toFixed(2) + 'MB' : (filesize / 1024).toFixed(2) + 'GB',
                                 col_type: style,
                                 extra: {
@@ -2047,7 +2056,7 @@ function erjiAliMyDisk(folder_id, drive_id) {
                         let filesize = item.size / 1024 / 1024;
                         d.push({
                             title: item.name,
-                            img: item.thumbnail ? item.thumbnail + "@Referer=https://www.aliyundrive.com/" : "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/tubiao/movie/13.svg",
+                            img: item.thumbnail ? item.thumbnail + "@Referer=https://www.aliyundrive.com/" : "http://123.56.105.145/tubiao/movie/13.svg",
                             url: $().lazyRule((file_id, sub_file_url,drive_id) => {
                                     require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyAliPublic.js');
                                     if (alitoken) {

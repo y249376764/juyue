@@ -9,7 +9,9 @@ let ypfile = rulepath + "yundisk.json";
 let tvfile = rulepath + "live.txt";
 let cfgfile = rulepath + "config.json";
 let sortfile = rulepath + "jksort.json";
-let codepath = (config.聚影||config.依赖||getPublicItem('聚影','https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/SrcJuying.js')).replace(/[^/]*$/,'');
+let codepath = (config.聚影||config.依赖||getPublicItem('聚影','https://raw.gitcode.com/src48597962/juying/raw/master/SrcJuying.js')).replace(/[^/]*$/,'');
+// v78: 内置图标优先读本地，缺图回退自己的仓库（不再出现白图标）
+var JY_REPO = "https://cdn.jsdelivr.net/gh/y249376764/juyue@main/Juying/";
 
 let Juconfig= {};
 let Jucfg=fetch(cfgfile);
@@ -32,28 +34,13 @@ function getFile(lx) {
 //获取所有接口或解析
 function getDatas(lx, isyx) {
     let datalist = [];
-    if(getItem('sourceMode','1')=='1'){
-        let sourcefile = getFile(lx);
-        let sourcedata = fetch(sourcefile);
-        if(sourcedata != ""){
-            try{
-                eval("datalist=" + sourcedata+ ";");
-            }catch(e){
-                datalist = [];
-            }
-        }
-    }else if(getItem('sourceMode','1')=='2'){
-        if(Juconfig['dySource']){
-            let boxSource = getBoxSource(Juconfig['dySource'], 2, {jk:lx=="jk"?1:0,jx:lx=="jx"?1:0});
-            if(boxSource.message){
-                toast(boxSource.message);
-            }else{
-                datalist = lx=="jk"?boxSource.jklist:boxSource.jxlist;
-                if(!datalist){
-                    toast("订阅源异常，获取失败，可更换订阅或切换模式");
-                    datalist = [];
-                }
-            }
+    let sourcefile = getFile(lx);
+    let sourcedata = fetch(sourcefile);
+    if(sourcedata != ""){
+        try{
+            eval("datalist=" + sourcedata+ ";");
+        }catch(e){
+            datalist = [];
         }
     }
     if (lx=="jx") {
@@ -115,9 +102,96 @@ if(fileExist(libspath+"libs_jk")){
 }
 
 // 较验box配置文件
+
+// ===== 多节点智能下载（网络导入优化）=====
+// 用户填一个 GitHub 链接经常拿不到（502/403/超时），
+// 这里自动生成等价候选（raw / jsdelivr / 代理池），逐个试到成功为止。
+
+// 带超时的取内容（底层 fetch 默认超时太长，导入时会一直转圈）
+function _fetchFast(u) {
+    var r = '';
+    try {
+        r = String(fetch(u, { timeout: 5000 }));
+    } catch (e1) {
+        try { r = String(fetch(u)); } catch (e2) { r = ''; }
+    }
+    if (!r) {
+        try { r = String(getContnet(u)); } catch (e3) { r = ''; }
+    }
+    return r;
+}
+
+function _candUrls(u) {
+    var out = [];
+    function add(x) { for (var i = 0; i < out.length; i++) { if (out[i] === x) { return; } } out.push(x); }
+    add(String(u));
+    var s = String(u);
+    // github.com/a/b/blob/branch/path  ->  raw / jsdelivr
+    var m = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/(?:blob|raw)\/([^\/]+)\/(.+)$/);
+    if (m) {
+        var user = m[1], repo = m[2], br = m[3], p = m[4];
+        add('https://raw.githubusercontent.com/' + user + '/' + repo + '/' + br + '/' + p);
+        add('https://cdn.jsdelivr.net/gh/' + user + '/' + repo + '@' + br + '/' + p);
+        add('https://fastly.jsdelivr.net/gh/' + user + '/' + repo + '@' + br + '/' + p);
+    }
+    // raw.githubusercontent -> jsdelivr(需分支) / raw 直连
+    var m2 = s.match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/);
+    if (m2) {
+        add('https://cdn.jsdelivr.net/gh/' + m2[1] + '/' + m2[2] + '@' + m2[3] + '/' + m2[4]);
+        add('https://fastly.jsdelivr.net/gh/' + m2[1] + '/' + m2[2] + '@' + m2[3] + '/' + m2[4]);
+    }
+    // gitee / 其他直连保持原样
+    // 代理池前缀（只对 github/raw 加）
+    var proxies = [];
+    try {
+        var pl = Juconfig['ghproxy'] || [];
+        for (var q = 0; q < pl.length && proxies.length < 5; q++) {
+            if (pl[q] && pl[q].url && !pl[q].stop) { proxies.push(pl[q].url); }
+        }
+    } catch (eP) { }
+    if (proxies.length === 0) {
+        proxies = ['https://gh-proxy.com/', 'https://ghfast.top/', 'https://gh-proxy.org/', 'https://ghps.cc/', 'https://gh.llkk.cc/'];
+    }
+    var base = out.slice(0);
+    for (var b = 0; b < base.length; b++) {
+        if (/github|jsdelivr/.test(base[b])) {
+            for (var pp = 0; pp < proxies.length; pp++) { add(proxies[pp] + base[b]); }
+        }
+    }
+    return out;
+}
+
+// 依次尝试候选，返回第一个"看起来有效"的内容
+function _fetchMulti(u) {
+    // ★ 性能：原来最多试 12 个节点且无超时，每个 getContnet 同步阻塞，
+    //   节点不通时要等到底层超时（往往十几秒）-> 页面一直转圈。
+    //   现在：①每个节点带 5s 超时 ②最多试 6 个 ③先出结果先返回
+    var cands = _candUrls(u);
+    var last = '';
+    var maxTry = cands.length < 6 ? cands.length : 6;
+    for (var i = 0; i < maxTry; i++) {
+        try {
+            var r = String(_fetchFast(cands[i]));
+            if (r && r.length > 20) {
+                // 排除错误页（jsdelivr 502 会返回 HTML/纯文本）
+                var t = r.replace(/^\s+/, '');
+                if (t.charAt(0) === '{' || t.charAt(0) === '[' || t.indexOf('sites') > -1 || t.indexOf('api_site') > -1) {
+                    log('多节点成功[' + (i + 1) + '/' + cands.length + ']：' + cands[i]);
+                    return r;
+                }
+                last = t.substr(0, 60);
+            }
+        } catch (eC) { last = eC.message; }
+    }
+    log('多节点全部失败，最后：' + last);
+    return '';
+}
+
 function checkBoxUrl(input) {
     let html;
     try{
+        input = toAsciiUrl(input);   // ★ 中文域名转 punycode
+        input = normalizeInputUrl(input);   // ★ GitHub blob 页面 -> raw 原始文件
         if(input.startsWith('/')){input = "file://" + input}
         if(input.includes('#nodejsID=')){
             let nodejsID = input.split('#nodejsID=')[1];
@@ -140,12 +214,30 @@ function checkBoxUrl(input) {
         }
         if(input.startsWith('http')){
             let tmpFile = cachepath + md5(input) + ".json";
-            if(!fileExist(tmpFile)){
-                showLoading('检测在线文件有效性');
-                html = getContnet(input);
+            // ★ 固定链接(jsdelivr @commit 等, URL 变即内容变)可长期缓存;
+            //   浮动链接(@main / raw 分支)内容会变, 加 10 分钟时效, 否则永远拿旧配置
+            let isFixed = /@[0-9a-f]{7,40}\b/i.test(input);
+            let needDl = !fileExist(tmpFile);
+            if(!needDl && !isFixed){
+                try{
+                    let rp0 = String(getPath(tmpFile)).replace(/^file:\/\//, "");
+                    let lm0 = Number(new java.io.File(rp0).lastModified());
+                    if((new Date().getTime() - lm0) > 600000){
+                        needDl = true;
+                    }
+                }catch(eT){
+                    needDl = true;
+                }
+            }
+            if(needDl){
+                showLoading('检测在线文件有效性（多节点自动重试）');
+                try { html = _fetchMulti(input); } catch (eM) { html = ''; }
+                if (!html) { html = getContnet(input); }
                 //log(html);
                 if(html){
                     writeFile(tmpFile, html);
+                }else if(fileExist(tmpFile)){
+                    html = fetch(tmpFile);
                 }
             }else{
                 html = fetch(tmpFile);
@@ -158,7 +250,83 @@ function checkBoxUrl(input) {
         if(html.includes('LuUPraez**')){
             html = base64Decode(html.split('LuUPraez**')[1]);
         }
-        eval('let data = ' + html)
+        let t = String(html).replace(/^\uFEFF/, '').trim();
+        // ★ 新增: txt 多仓(每行一个链接, # 开头为注释), 原逻辑只认 JSON 的 {urls:[...]}
+        if(t.length>0 && t.charAt(0)!='{' && t.charAt(0)!='['){
+            let lines = t.split('\n');
+            let urls2 = [];
+            for(let li=0; li<lines.length; li++){
+                let ln = String(lines[li]).replace(/\r/g,'').trim();
+                if(!ln || ln.indexOf('#')===0){ continue; }
+                let nm3 = ln, u3 = ln;
+                let ci = ln.lastIndexOf(',');
+                if(ci > 0){
+                    let tail = ln.substr(ci+1).trim();
+                    if(/^https?:\/\//.test(tail) || tail.indexOf('/')===0){
+                        nm3 = ln.substr(0, ci).trim();
+                        u3 = tail;
+                    }
+                }
+                // ★ 原判断 u3.indexOf('/')===0 太宽松:
+                //   JS 源码里 "// 注释" 也以 / 开头 -> 被当成"本地路径链接"
+                //   -> 每一行代码都被当成仓库列出来让用户选(用户实际遇到的现象)
+                //   收紧: 排除 // 注释、含空格、含代码特征字符
+                var uok = false;
+                if(/^https?:\/\//.test(u3)){
+                    uok = (u3.indexOf(' ') === -1);
+                }else if(u3.indexOf('file') === 0){
+                    uok = (u3.indexOf(' ') === -1);
+                }else if(u3.indexOf('/') === 0){
+                    uok = (u3.indexOf('//') !== 0)
+                        && (u3.indexOf(' ') === -1)
+                        && !/[(){}=;,"'<>]/.test(u3)
+                        && /\.(json|txt|m3u|m3u8|js|py|php|xml)$/i.test(u3.split('?')[0]);
+                }
+                if(uok){
+                    if(!nm3 || nm3===u3){
+                        let short = u3.split('?')[0];
+                        nm3 = short.substr(short.lastIndexOf('/')+1) || u3;
+                    }
+                    urls2.push({name: nm3, url: u3});
+                }
+            }
+            if(urls2.length > 0){
+                hideLoading();
+                return {urls: urls2};
+            }
+            // ★ 按行没解析出 -> 内容可能不是"每行一个链接"的格式, 智能识别
+            //   (1) HTML 页面(如 GitHub 文件页/导航站): 提取里面的配置链接
+            if(/<!DOCTYPE|<html[\s>]|<meta\s|<body[\s>]|<div[\s>]/i.test(t)){
+                var hlinks = extractLinksFromHtml(t);
+                if(hlinks.length > 0){
+                    hideLoading();
+                    return {urls: hlinks};
+                }
+                hideLoading();
+                return { message: "失败：这是网页不是配置文件，且页面里没找到可导入的链接" };
+            }
+            //   (2) 其他文本: 先正则抠出 http 链接抢救一下
+            var ex = extractUrlsFromText(t);
+            var good = [];
+            for(var ei = 0; ei < ex.length; ei++){
+                if(/\.(json|txt|m3u|m3u8)(\?|$)/i.test(ex[ei]) || /\/api\//.test(ex[ei])){
+                    var short0 = ex[ei].split('?')[0];
+                    good.push({name: (short0.substr(short0.lastIndexOf('/')+1) || ex[ei]), url: ex[ei]});
+                }
+            }
+            if(good.length > 0){
+                hideLoading();
+                return {urls: good};
+            }
+            //   (3) 还是不行, 且看着像 JS 源码 -> 明确告知, 不再把每行代码当仓库列出来
+            if(looksLikeJsCode(t)){
+                hideLoading();
+                return { message: "失败：这是 JS 源码文件，不是接口配置（请填 .json / .txt 配置地址）" };
+            }
+            hideLoading();
+            return { message: "失败：未识别到有效链接（支持 JSON 单仓/多仓、txt 每行一个链接）" };
+        }
+        eval('let data = ' + t)
         if(data.urls){
             hideLoading();
             return {urls: data.urls};
@@ -175,9 +343,18 @@ function checkBoxUrl(input) {
 }
 
 // 从box配置文件获取
-function getBoxSource(input, mode, imports){
+function getBoxSource(input, mode, imports, raw){
     //input配置文件地址，mode模式1为导入，2为订阅，3为较验
+    //raw 有值 = 直接用现成内容(跳过网络抓取)，供 TVBox 预检页复用
     let html,data;
+    if(raw){
+        html = String(raw);
+        try{
+            eval('data = ' + html);
+        }catch(eR0){
+            return { message: "失败：配置内容无法解析>" + eR0.message };
+        }
+    }else{
     let checkUrl = checkBoxUrl(input);
     if(checkUrl.message){
         return checkUrl;
@@ -188,10 +365,45 @@ function getBoxSource(input, mode, imports){
     }else if(checkUrl.html){
         html = checkUrl.html;
         eval('data = ' + html);
+        // ★ LunaTV / MoonTV / LibreTV 等格式: {cache_time, api_site:{key:{name,api,detail}}}
+        //   它们不是 TVBox 的 sites 数组, 聚影原本完全不认 -> 导入 0 站。
+        //   (星集把这叫"菠菜源", 其 addbocai 批量导入支持的就是这个格式)
+        try {
+            if ((!data.sites || data.sites.length === 0) && data.api_site) {
+                var _as = data.api_site;
+                var _sites = [];
+                var hasOwn = Object.prototype.hasOwnProperty;
+                for (var _k in _as) {
+                    if (!hasOwn.call(_as, _k)) { continue; }
+                    var _v = _as[_k];
+                    if (!_v) { continue; }
+                    var _api = String(_v.api || '').trim();
+                    if (!_api) { continue; }
+                    var _item = {
+                        key: _k,
+                        name: String(_v.name || _k).trim(),
+                        type: 1,
+                        api: _api,
+                        searchable: 1,
+                        quickSearch: 1,
+                        filterable: 1
+                    };
+                    if (_v.detail) { _item.detail = String(_v.detail); }
+                    _sites.push(_item);
+                }
+                if (_sites.length > 0) {
+                    data.sites = _sites;
+                    log('识别为 api_site 格式, 转换站点 ' + _sites.length + ' 个');
+                }
+            }
+        } catch (eAS) {
+            log('api_site 转换失败>' + eAS.message);
+        }
     }else{
         return {
             message: "异常：为啥会没有获取到html"
         };
+    }
     }
     
     if(mode==3){//订阅较验完成
@@ -235,6 +447,41 @@ function getBoxSource(input, mode, imports){
                     arr['onlysearch'] = 1;
                 }
             }else{
+                // ★ 新增: TVBox 配置里 api 直接指向蜘蛛文件(.py/.js)的识别
+                //   原逻辑只按 csp_ 前缀匹配, py 蜘蛛完全无法导入
+                let apistr = String(obj.api || "");
+                let spath = input.substr(0, input.lastIndexOf('/')+1);
+                if(/^clan:/.test(apistr)){
+                    apistr = apistr.replace("clan://TVBox/", (input.match(/file.*\//)||[""])[0]);
+                }else if(apistr.indexOf('./')===0 || apistr.indexOf('../')===0){
+                    apistr = apistr.replace("../", spath).replace(/\.\//g, spath);
+                }
+                if(/\.py(\?|#|$)/i.test(apistr) || /\.js(\?|#|$)/i.test(apistr)){
+                    let ispy = /\.py(\?|#|$)/i.test(apistr);
+                    try{
+                        let sc = getContnet(toAsciiUrl(apistr));
+                        if(sc && sc.length > 30){
+                            let fn0 = apistr.split('?')[0].split('#')[0];
+                            let fn = fn0.substr(fn0.lastIndexOf('/')+1);
+                            if(fn){
+                                // 存到永久目录 jiekou/, 避免 _cache 被清
+                                let sf = jkfilespath + (ispy ? "py_" : "hipy_t3_") + fn;
+                                writeFile(sf, sc);
+                                if(fileExist(sf)){
+                                    let nm2 = obj.name || fn;
+                                    let a2 = { "name": nm2, "type": (ispy ? "py" : "hipy_t3"), "url": sf, "ext": apistr };
+                                    if(String(nm2).indexOf('[搜]')>-1){ a2['onlysearch'] = 1; }
+                                    a2['searchable'] = obj.searchable;
+                                    return {data: a2};
+                                }
+                            }
+                        }else{
+                            log((obj.name||'?') + '>蜘蛛文件获取为空, 跳过');
+                        }
+                    }catch(e5){
+                        log((obj.name||'?') + '>蜘蛛文件获取失败>' + e5.message);
+                    }
+                }
                 let extfile = obj.ext;
                 if($.type(extfile)=='string'){
                     if(/^clan:/.test(extfile)){
@@ -277,7 +524,7 @@ function getBoxSource(input, mode, imports){
                         urlfile = filepath + '_' + (extfile.includes('?')?obj.key:"")+extfile.split('?')[0].substr(extfile.split('?')[0].lastIndexOf('/')+1);
                         if(mode==1){
                             try{
-                                let content = getContnet(extfile);
+                                let content = getContnet(toAsciiUrl(extfile));
                                 if (!content) {
                                     urlfile = '';
                                 }else{
@@ -363,23 +610,230 @@ function shuffleArray(array) {
     array.sort(() => Math.random() - 0.5);
     return array;
 }
+
+
+// ===== 智能识别：拿到内容后先判断"这是什么"，再决定怎么处理 =====
+// 原逻辑一律按行拆分 -> 拿到 JS 源码时会把每一行代码当成"仓库"列给用户选(很离谱)
+
+// 1) 输入 URL 预处理：GitHub/Gitee blob 页面 -> 原始文件地址
+function normalizeInputUrl(u) {
+    try {
+        if (!u || typeof u !== 'string') { return u; }
+        var s = u.trim();
+        // https://github.com/a/b/blob/main/x.json -> raw.githubusercontent.com/a/b/main/x.json
+        var m = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
+        if (m) { return 'https://raw.githubusercontent.com/' + m[1] + '/' + m[2] + '/' + m[3] + '/' + m[4]; }
+        // https://github.com/a/b/raw/main/x.json
+        var m2 = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/raw\/([^\/]+)\/(.+)$/);
+        if (m2) { return 'https://raw.githubusercontent.com/' + m2[1] + '/' + m2[2] + '/' + m2[3] + '/' + m2[4]; }
+        // gitee
+        var m3 = s.match(/^https?:\/\/gitee\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/);
+        if (m3) { return 'https://gitee.com/' + m3[1] + '/' + m3[2] + '/raw/' + m3[3] + '/' + m3[4]; }
+        // jsdelivr 带 gh 的 blob 路径
+        var m4 = s.match(/^(https?:\/\/cdn\.jsdelivr\.net\/gh\/[^\/]+\/[^\/]+)@[^\/]+\/blob\/(.+)$/);
+        if (m4) { return m4[1] + '@main/' + m4[2]; }
+        return s;
+    } catch (e) { return u; }
+}
+
+// 2) 从任意文本里正则提取 http(s) 链接（去掉代码里的引号/括号包裹）
+function extractUrlsFromText(text) {
+    var out = [];
+    var seen = {};
+    try {
+        var re = /https?:\/\/[A-Za-z0-9\-._~%\/?#\[\]@!$&'()*+,;=]+/g;
+        var mm;
+        while ((mm = re.exec(text)) !== null) {
+            var u = mm[0];
+            // 去掉结尾的标点（常见于被代码/标点包裹）
+            u = u.replace(/[\)\]}'">,;。]+$/, '');
+            if (u.length < 12) { continue; }
+            if (seen[u]) { continue; }
+            seen[u] = 1;
+            out.push(u);
+            if (out.length > 30) { break; }
+        }
+    } catch (e) { }
+    return out;
+}
+
+// 3) 从 HTML 页面里提取"像配置"的链接（GitHub 页面、导航站等）
+function extractLinksFromHtml(h) {
+    var out = [];
+    var seen = {};
+    function add(u, nm) {
+        try {
+            u = String(u).replace(/&amp;/g, '&');
+            if (!/^https?:\/\//.test(u)) { return; }
+            if (seen[u]) { return; }
+            seen[u] = 1;
+            out.push({ name: nm || shortName(u), url: u });
+        } catch (e) { }
+    }
+    function shortName(u) {
+        var p = u.split('?')[0];
+        var f = p.substr(p.lastIndexOf('/') + 1);
+        return f || u;
+    }
+    try {
+        // GitHub blob 页面里的 "raw" 按钮 / 文件链接
+        var re1 = /href="([^"]*\/(?:raw|blob)\/[^"]*\.(?:json|txt|js|m3u|m3u8))"/g;
+        var m1;
+        while ((m1 = re1.exec(h)) !== null) {
+            var u1 = m1[1];
+            if (u1.indexOf('/') === 0) { u1 = 'https://github.com' + u1; }
+            add(normalizeInputUrl(u1));
+        }
+        // 直接的配置文件链接
+        var re2 = /(?:href|src|data-url)="(https?:\/\/[^"]*\.(?:json|txt|m3u|m3u8)(?:\?[^"]*)?)"/g;
+        var m2;
+        while ((m2 = re2.exec(h)) !== null) { add(m2[1]); }
+        // 纯文本里的链接（最后一个逗号前是名称的那种也顺带兼容）
+        if (out.length === 0) {
+            var all = extractUrlsFromText(h);
+            for (var i = 0; i < all.length && out.length < 20; i++) {
+                if (/\.(json|txt|m3u|m3u8)(\?|$)/i.test(all[i])) { add(all[i]); }
+            }
+        }
+    } catch (e) { }
+    return out;
+}
+
+// 4) 判断内容是不是 JS 源码（而不是配置）
+function looksLikeJsCode(t) {
+    if (!t) { return false; }
+    var score = 0;
+    if (/\bfunction\s*\w*\s*\(/.test(t)) { score++; }
+    if (/\b(var|let|const)\s+\w+\s*=/.test(t)) { score++; }
+    if (/=>\s*[{(]/.test(t)) { score++; }
+    if (/\brequire\s*\(|\bimport\s+/.test(t)) { score++; }
+    if (/\bmodule\.exports\b|\$\.exports/.test(t)) { score++; }
+    if (/;[\s]*$/.test(t) || /\{[\s]*\n/.test(t)) { score++; }
+    return score >= 2;
+}
+
+// ===== IDN / 中文域名支持 =====
+// 摸鱼接口等站点使用中文域名(如 http://我不是.摸鱼儿.top),
+// 底层 HTTP 库按 latin-1 编码 URL 会直接抛异常 -> 请求发不出去 -> 提取不到。
+// 默影视等 Java 原生实现会自动转 punycode 所以能播, 聚影缺这一步。
+function _punyAdapt(delta, numpoints, firsttime) {
+    var base = 36, tmin = 1, tmax = 26, skew = 38, damp = 700;
+    delta = firsttime ? Math.floor(delta / damp) : Math.floor(delta / 2);
+    delta = delta + Math.floor(delta / numpoints);
+    var k = 0;
+    while (delta > Math.floor((base - tmin) * tmax / 2)) {
+        delta = Math.floor(delta / (base - tmin));
+        k = k + base;
+    }
+    return k + Math.floor((base - tmin + 1) * delta / (delta + skew));
+}
+function _punyEncode(str) {
+    var base = 36, tmin = 1, tmax = 26, skew = 38, damp = 700, initialBias = 72, initialN = 128;
+    var out = [];
+    var inp = [];
+    for (var a = 0; a < str.length; a++) { inp.push(str.charCodeAt(a)); }
+    for (var b1 = 0; b1 < inp.length; b1++) {
+        if (inp[b1] < 128) { out.push(String.fromCharCode(inp[b1])); }
+    }
+    function digit(d) {
+        return String.fromCharCode(d + 22 + ((d < 26) ? 75 : 0));
+    }
+    var b = out.length, h = b, n = initialN, delta = 0, bias = initialBias;
+    if (b > 0) { out.push('-'); }
+    while (h < inp.length) {
+        var m = 2147483647;
+        for (var i1 = 0; i1 < inp.length; i1++) {
+            if (inp[i1] >= n && inp[i1] < m) { m = inp[i1]; }
+        }
+        delta = delta + (m - n) * (h + 1);
+        n = m;
+        for (var i2 = 0; i2 < inp.length; i2++) {
+            if (inp[i2] < n) { delta++; }
+            if (inp[i2] === n) {
+                var q = delta, k2 = base;
+                while (true) {
+                    var t = (k2 <= bias + tmin) ? tmin : ((k2 >= bias + tmax) ? tmax : (k2 - bias));
+                    if (q < t) { break; }
+                    out.push(digit(t + (q - t) % (base - t)));
+                    q = Math.floor((q - t) / (base - t));
+                    k2 = k2 + base;
+                }
+                out.push(digit(q));
+                bias = _punyAdapt(delta, h + 1, (h === b));
+                delta = 0;
+                h++;
+            }
+        }
+        delta++;
+        n++;
+    }
+    return out.join('');
+}
+function _hostToAscii(host) {
+    if (!host || !/[^\u0000-\u007F]/.test(host)) { return host; }
+    try {
+        if (typeof java !== 'undefined' && java.net && java.net.IDN) {
+            return String(java.net.IDN.toASCII(host));
+        }
+    } catch (eA) { }
+    var parts = host.split('.');
+    var res = [];
+    for (var pi = 0; pi < parts.length; pi++) {
+        var p = parts[pi];
+        if (/[^\u0000-\u007F]/.test(p)) {
+            res.push('xn--' + _punyEncode(p));
+        } else {
+            res.push(p);
+        }
+    }
+    return res.join('.');
+}
+// 只转 host, 保留路径/查询里的中文(中文域名的 path 一般也是 ASCII)
+function toAsciiUrl(u) {
+    try {
+        if (!u || typeof u !== 'string') { return u; }
+        var idx = u.indexOf('://');
+        if (idx < 0) { return u; }
+        var proto = u.substring(0, idx + 3);
+        var rest = u.substring(idx + 3);
+        var at = rest.indexOf('@');
+        var prefix2 = '';
+        if (at >= 0) { prefix2 = rest.substring(0, at + 1); rest = rest.substring(at + 1); }
+        var slash = rest.search(/[\/#?]/);
+        var host = (slash >= 0) ? rest.substring(0, slash) : rest;
+        var tail = (slash >= 0) ? rest.substring(slash) : '';
+        var colon = host.lastIndexOf(':');
+        var port = '';
+        if (colon > 0 && host.indexOf(']') < colon) {
+            port = host.substring(colon);
+            host = host.substring(0, colon);
+        }
+        if (host.charAt(0) === '[' && host.charAt(host.length - 1) === ']') {
+            return proto + prefix2 + host + port + tail;
+        }
+        return proto + prefix2 + _hostToAscii(host) + port + tail;
+    } catch (eU) {
+        return u;
+    }
+}
+
 //获取在线文件内容
 function getContnet(url) {
+    url = toAsciiUrl(url);   // ★ 中文域名转 punycode, 否则请求发不出去
     if(url.startsWith('file')){
         return fetch(url);
     }else if(!url.startsWith('http')){
         return '';
     }
     if(url.startsWith('https://raw.githubusercontent.com')){
-        // 自托管：仅在自己仓库的备用地址间回退
-        let pres = ['', 'https://gh-proxy.com/', 'https://ghfast.top/'];
-        for(let i=0;i<pres.length;i++){
-            try{
-                let content = fetch(pres[i]+url, {timeout:6000});
-                if (content && !content.startsWith('<!DOCTYPE html>') && !content.startsWith('<html>') && !/502 Bad Gateway/.test(content)) {
-                    return content;
-                }
-            }catch(e){}
+        let proxys = $.require('ghproxy').getproxy();
+        shuffleArray(proxys);
+        proxys.push('');
+        for(let i=0;i<proxys.length;i++){
+            let content = fetch(proxys[i]+url, {timeout:6000});
+            if (content && !content.startsWith('<!DOCTYPE html>') && !content.startsWith('<html>') && !/502 Bad Gateway/.test(content)) {
+                return content;
+            }
         }
         return '';
     }else{
@@ -468,10 +922,30 @@ function deleteData(lx, data){
     }
 
     dellist.forEach(it => {
-        if(lx=='jk' && it.url.includes(jkfilespath)){
-            deleteFile(it.url);
+        // 蜘蛛源(hipy_t3/py)的本地文件在 it.ext 里，只删 it.url 会留下 .py/.js
+        if(lx=='jk'){
+            try { if(it.url && /^hiker:\/\/files\//.test(String(it.url))) { deleteFile(it.url); } } catch(eD1){}
+            try { if(it.ext && /^hiker:\/\/files\//.test(String(it.ext))) { deleteFile(it.ext); } } catch(eD2){}
         }
-        let index = datalist.indexOf(datalist.filter(d => it.url==d.url )[0]);
+        // ★ 删除判据必须与 jiekousave 的去重视则一致。
+        //   v58 起去重是"同名同址"(url+name)，允许同 url 不同 name 的多条并存；
+        //   而这里原判据只看 url 且取 filter()[0] —— 会删到另一条同名址记录，
+        //   用户看着"没删掉"，于是要点第二次。这就是"删除要两次才生效"的真因。
+        let hit = null;
+        for(let di = 0; di < datalist.length; di++){
+            let dd = datalist[di];
+            if(!dd || dd.url != it.url){ continue; }
+            if(it.name && dd.name && String(it.name) !== String(dd.name)){ continue; }
+            hit = dd; break;
+        }
+        if(!hit){
+            // 精确匹配不到 -> 退回只看 url（兼容老数据 / 被改名过的源）
+            hit = datalist.filter(d => d && d.url == it.url)[0];
+        }
+        if(!hit){ return; }
+        let index = datalist.indexOf(hit);
+        // ★ 原写法 indexOf(undefined) 得 -1，splice(-1,1) 会误删最后一条
+        if(index < 0){ return; }
         datalist.splice(index, 1);
     })
 
@@ -749,6 +1223,9 @@ function selectSource() {
                 clearMyVar('dianbo$flCache');
                 clearMyVar('点播动态加载loading');
                 clearMyVar('点播一级jkdata');
+                // ★ 补: 切源后 refreshPage 会触发 onRefresh 让"点播下滑num"+1,
+                //   未清零会导致动态加载/指纹校验分支误判 -> 页面空白需再刷一次
+                clearMyVar('点播下滑num');
                 
                 let key = tmpList[i].url;
                 setJkSort(key, {use: 1});
@@ -884,18 +1361,15 @@ function getHistory(i){
 }
 // 获取图标地址
 function getIcon(icon, nochange) {
-    let _cp = codepath;
-    try {
-        if (_cp.indexOf("hiker://") === 0 && !fileExist(_cp + "img/" + icon)) {
-            _cp = (typeof jyRemoteBase === "function") ? jyRemoteBase() : String(getItem("Jy_remote", "")).replace(/[^/]*$/, "");
-            if (_cp.indexOf("http") !== 0) { _cp = codepath; }
-        }
-    } catch (eIc) { _cp = codepath; }
+    var _base = codepath;
+    var _local = true;
+    try { _local = fileExist(codepath + 'img/' + icon); } catch (eIc) { _local = false; }
+    if (!_local) { _base = JY_REPO; }
     if(!icon.includes('.svg')){
-        return _cp + 'img/' + icon;
+        return _base + 'img/' + icon;
     }
     let color = getItem('主题颜色','');
-    return _cp + 'img/' + icon + ((!color||nochange)?'':'?s='+color+'@js=' + $.toString((color) => {
+    return _base + 'img/' + icon + ((!color||nochange)?'':'?s='+color+'@js=' + $.toString((color) => {
         let javaImport = new JavaImporter();
         javaImport.importPackage(Packages.com.example.hikerview.utils);
         with(javaImport) {
@@ -916,11 +1390,11 @@ if (getItem('规则日志打印','0') != "1") {
 // 下载必要的依赖文件
 function downloadFiles() {
     let 代码仓 = getItem("依赖","").replace(/[^/]*$/,'');
-    if(代码仓){
-        try{
-            requireDownload(代码仓 + "img/聚影.png", 'hiker://files/cache/src/聚影.png');
-        }catch(e){}
-    }
+    // v78: 源码和图标都已内置到本地，不再联网下载，避免首页首帧被网络拖住
+    if (!代码仓 || String(代码仓).indexOf("hiker://") === 0) { return; }
+    try {
+        requireDownload(代码仓 + "img/聚影.png", 'hiker://files/cache/src/聚影.png');
+    } catch (e) { }
 }
 // 分源资源码
 function shareResource() {
@@ -1250,261 +1724,6 @@ function shareResource() {
 
     setResult(d);
 }
-// 资源订阅管理
-function subResource() {
-    addListener("onClose", $.toString(() => {
-        clearMyVar('Juconfig');
-    }));
-    let d = [];
-    d.push({
-        title: '⚡ 订阅管理',
-        col_type: "rich_text"
-    });
-    let resources = Juconfig['subResource'] || [];
-    storage0.putMyVar('Juconfig', Juconfig);
-    
-    d.push({
-        title: '订阅聚影资源码，当前共有'+resources.length+'个',
-        desc: '感谢TyrantGenesis大佬提供的云6剪贴板',
-        url: $("", "输入聚影资源码").input(()=>{
-            input = input.trim();
-            if(!input || !input.includes('聚影资源码￥')){
-                return "toast://输入不正确";
-            }
-            try{
-                let path = aesDecode('Juying2', input.split('￥')[1]);
-                let pasteget = JSON.parse(request('https://pasteme.tyrantg.com/api/getContent/'+path));
-                if(pasteget.result_code=="SUCCESS"){
-                    let data = pasteget.data;
-                    if(data=="juying"){
-                        return "toast://资源码为空";
-                    }
-                    let newname = "";
-                    try{
-                         newname = input.split('￥')[2];
-                    }catch(e){}
-                    return $(newname, "获取成功，输入名称保存").input((path)=>{
-                        input = input.trim();
-                        if(input){
-                            let Juconfig = storage0.getMyVar('Juconfig');
-                            let resources = Juconfig['subResource'] || [];
-                            resources.push({
-                                name: input,
-                                path: path
-                            })
-                            Juconfig['subResource'] = resources;
-                            let cfgfile = globalMap0.getVar('Src_Jy_gmParams').cfgfile;
-                            writeFile(cfgfile, JSON.stringify(Juconfig));
-                            refreshPage(false);
-                            return 'toast://保存成功';
-                        }else{
-                            return "toast://不能为空";
-                        }
-                    }, path)
-                }else{
-                    return 'toast://获取失败：'+pasteget.message;
-                }
-            } catch (e) {
-                log('获取失败：'+e.message); 
-                return 'toast://获取失败，请重新再试';
-            }
-        }),
-        col_type: "text_center_1"
-    });
-
-    resources.forEach(it=>{
-        d.push({
-            title: it.name + "-" + it.path.split('@')[0],
-            desc: "自动：" + (it.auto?"是":"否") + "       同步时间：" + (it.time||"") + "\n模式：" + (it.mode==2?"全量":"增量") + "   导入项目："+(it.options||""),
-            url: $(["复制","删除","改名","下载","自动",it.mode=="2"?"增量":"全量"], 2, "选择操作功能项").select((it)=>{
-                let Juconfig = storage0.getMyVar('Juconfig');
-                let cfgfile = globalMap0.getVar('Src_Jy_gmParams').cfgfile;
-                let codeid = aesEncode('Juying2', it.path);
-                if(input=="复制"){
-                    copy('聚影资源码￥'+codeid+'￥'+it.name);
-                    return "hiker://empty";
-                }else if(input=="自动"){
-                    let resources = Juconfig['subResource'] || [];
-                    resources.forEach(its=>{
-                        if(its.path!=it.path || its.auto){
-                            delete its.auto;
-                        }else{
-                            its.auto = 1;
-                        }
-                    })
-                    writeFile(cfgfile, JSON.stringify(Juconfig));
-                    refreshPage(false);
-                    return 'toast://设置成功';
-                }else if(input=="增量"||input=="全量"){
-                    let resources = Juconfig['subResource'] || [];
-                    resources.forEach(its=>{
-                        if(its.path==it.path){
-                            if(input=="全量"){
-                                its.mode = 2;
-                            }else{
-                                delete its.mode;
-                            }
-                        }
-                    })
-                    writeFile(cfgfile, JSON.stringify(Juconfig));
-                    refreshPage(false);
-                    return 'toast://设置成功'+(input=="全量"?"：会先删除本地所有再导入":"");
-                }else if(input=="删除"){
-                    return $("确定要删除资源码："+it.name+"\n删除后无法找回").confirm((Juconfig,it,cfgfile)=>{
-                        try{
-                            let resources = Juconfig['subResource'] || [];
-                            const index = resources.findIndex(item => item.path === it.path);
-                            if (index !== -1) {
-                                resources.splice(index, 1);
-                            }
-                            Juconfig['subResource'] = resources;
-                            writeFile(cfgfile, JSON.stringify(Juconfig));
-                            refreshPage(false);
-                            return 'toast://删除成功';
-                        } catch (e) {
-                            log('删除失败：'+e.message); 
-                            return 'toast://删除失败，请重新再试';
-                        }
-                    }, Juconfig, it, cfgfile)
-                }else if(input=="改名"){
-                    return $(it.name, "输入新名称").input((Juconfig,path,cfgfile)=>{
-                        input = input.trim();
-                        if(input){
-                            let resources = Juconfig['subResource'] || [];
-                            const index = resources.findIndex(item => item.path === path);
-                            if (index !== -1) {
-                                resources[index].name = input;
-                            }
-                            Juconfig['subResource'] = resources;
-                            writeFile(cfgfile, JSON.stringify(Juconfig));
-                            refreshPage(false);
-                        }
-                        return "hiker://empty";
-                    }, Juconfig, it.path, cfgfile)
-                }else if(input=="下载"){
-                    require(config.聚影.replace(/[^/]*$/,'') + 'SrcJyPublic.js');
-                    return updateResource(it,1);
-                }
-            }, it),
-            col_type: "text_1"
-        });
-    })
-    setResult(d);
-}
-
-// 更新同步订阅资源
-function updateResource(it,refresh) {
-    if(!it){
-        let resources = Juconfig['subResource'] || [];
-        for (let i = 0; i < resources.length; i++) {
-            if (resources[i].auto) {
-                it = resources[i];
-                break;
-            }
-        }
-        let playSet = Juconfig['playSet'] || {};
-        if(playSet['clearM3u8Ad']){
-            let m3u8Ad = fc(config.聚影.replace(/[^/]*$/,'') + "plugins/m3u8_ad_rule.json", 72);
-            if(m3u8Ad){
-                writeFile("hiker://files/rules/m3u8_ad_rule.json", m3u8Ad);
-            }
-        }
-    }
-    if(!it){
-        log("自动同步取消，没有可执行的订阅源");
-        return "hiker://empty";
-    }
-    try{
-        let pasteget = JSON.parse(request('https://pasteme.tyrantg.com/api/getContent/'+it.path,{
-            "content-type": "application/json;charset=UTF-8"
-        }));
-        if(pasteget.result_code=="SUCCESS"){
-            require(config.聚影.replace(/[^/]*$/,'') + 'SrcJySet.js');
-            let gzip = $.require(codepath + "plugins/gzip.js");
-            let textcontent = gzip.unzip(pasteget.data);
-            let pastedata = JSON.parse(textcontent);
-            let jknum = 0, jxnum = 0, ypnum = 0, tvnum = 0, sm = '';
-            let options = [];
-            let jkdatalist = pastedata.接口||[];
-            if(jkdatalist.length>0){
-                jknum = jiekousave(jkdatalist, it.mode==2?2:1);
-                options.push('接口');
-            }
-            let jxdatalist = pastedata.解析||[];
-            if(jxdatalist.length>0){
-                jxnum = jiexisave(jxdatalist, it.mode==2?2:1);
-                options.push('解析');
-            }
-            if(pastedata.直播){
-                let livefilepath = globalMap0.getVar('Src_Jy_gmParams').rulepath + "liveconfig.json";
-                let liveconfig = pastedata.直播;
-                if(it.mode!=2){
-                    let livefile = fetch(livefilepath);
-                    if(livefile){
-                        try{
-                            let olddata = JSON.parse(livefile).data;
-                            let newdata = liveconfig.data;
-                            newdata.forEach(tv=>{
-                                if(!olddata.some(item => tv.url==item.url)){
-                                    olddata.push(tv);
-                                    tvnum++;
-                                }
-                            })
-                            liveconfig.data = olddata;
-                            options.push('直播');
-                            writeFile(livefilepath, JSON.stringify(liveconfig));
-                        }catch(e){
-                            //log("增量导入直播失败>"+e.message);
-                        }
-                    }
-                }else if(liveconfig.data){
-                    options.push('直播');
-                    writeFile(livefilepath, JSON.stringify(liveconfig));
-                    sm = "，直播订阅已同步"
-                }
-            }
-            let ypdatalist = pastedata.云盘||[];
-            if(ypdatalist.length>0){
-                ypnum = yundisksave(ypdatalist, 1);
-                options.push('云盘');
-            }
-            let ghproxy = pastedata.ghproxy||[];
-            if(ghproxy.length>0){
-                if(it.mode!=2){
-                    oldproxy = Juconfig['ghproxy'] || [];
-                    ghproxy.forEach(gh=>{
-                        if(!oldproxy.some(item => gh.url==item.url)){
-                            oldproxy.push(gh);
-                        }
-                    })
-                    Juconfig['ghproxy'] = oldproxy;
-                }else{
-                    Juconfig['ghproxy'] = ghproxy;
-                }
-                options.push('ghproxy');
-            }
-
-            let resources = Juconfig['subResource'] || [];
-            const index = resources.findIndex(item => item.path === it.path);
-            if (index !== -1) {
-                resources[index].time = $.dateFormat(new Date(), "yyyy-MM-dd HH:mm:ss");
-                resources[index].options = options.join(",");
-            }
-            Juconfig['subResource'] = resources;
-            writeFile(cfgfile, JSON.stringify(Juconfig));
-            log("更新同步订阅资源完成；接口："+jknum+"，解析："+jxnum+"，云盘："+ypnum+(sm||("，直播："+tvnum)));
-            if(refresh){
-                refreshPage(false);
-            }
-            return "toast://更新同步订阅资源完成";
-        }else{
-            return "toast://订阅资源网络错误或资源码已失效";
-        }
-    }catch(e){
-        log('更新同步订阅资源失败：'+e.message); 
-        return 'toast://更新同步订阅资源失败';
-    }
-}
 // 扫描本地文件夹，是否有新增接口文件
 function scanFolder(input,start) {
     if(!start){
@@ -1521,7 +1740,7 @@ function scanFolder(input,start) {
     
     if(newfiles.length==0){
         log("扫描本地文件夹,未发现新增的js/py文件");
-        return start?"hiker://empty":"toast://没有新增的js/py文件"
+        return start?[]:"toast://没有新增的js/py文件"
     }else if(start){
         return newfiles;
     }else{
