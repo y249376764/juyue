@@ -1607,7 +1607,7 @@ function newSearch(name) {
 
 // 版本检测 -> 弹窗更新
 function Version() {
-    var BUILD = 78;
+    var BUILD = 79;
     var MY_RULE_VERSION = 0;
     try { MY_RULE_VERSION = parseInt($.require("config").version) || 0; } catch (eMV) { MY_RULE_VERSION = 0; }
     if (!MY_RULE_VERSION) { try { MY_RULE_VERSION = parseInt(MY_RULE.version) || 0; } catch (eMV2) { MY_RULE_VERSION = 0; } }
