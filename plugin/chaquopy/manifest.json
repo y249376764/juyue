@@ -1,0 +1,68 @@
+{
+ "files": [
+  {
+   "path": "PythonHiker.js",
+   "size": 7984
+  },
+  {
+   "path": "arm64-v8a/libchaquopy_java.so",
+   "size": 150160
+  },
+  {
+   "path": "arm64-v8a/libpython3.8.so",
+   "size": 798136
+  },
+  {
+   "path": "chaquopy.apk",
+   "size": 9486516
+  },
+  {
+   "path": "classes.dex",
+   "size": 35272
+  },
+  {
+   "path": "libs_py/ad.m3u8",
+   "size": 20498
+  },
+  {
+   "path": "libs_py/app.py",
+   "size": 710
+  },
+  {
+   "path": "libs_py/base/hiker.py",
+   "size": 939
+  },
+  {
+   "path": "libs_py/base/htmlParser.py",
+   "size": 14055
+  },
+  {
+   "path": "libs_py/base/loader.py",
+   "size": 1053
+  },
+  {
+   "path": "libs_py/base/spider.py",
+   "size": 20132
+  },
+  {
+   "path": "libs_py/base_spider.py",
+   "size": 14548
+  },
+  {
+   "path": "libs_py/test.py",
+   "size": 328
+  },
+  {
+   "path": "libs_py/test_1.txt",
+   "size": 217
+  },
+  {
+   "path": "libs_py/胖虎.py",
+   "size": 8951
+  },
+  {
+   "path": "requirements.txt",
+   "size": 68
+  }
+ ]
+}

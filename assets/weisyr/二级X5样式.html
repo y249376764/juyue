@@ -1,0 +1,1074 @@
+<!doctype html>
+<html>
+<head>
+<title>二级新样式_by顺承天意(2026.05.19)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+<script type="text/javascript">
+	eval(fy_bridge_app.getInternalJs());
+	window.request = window.request00 || window.request;
+</script>
+<script src="https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/zepto.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/zepto-module.js"></script>
+<style type="text/css">
+* {
+	text-size-adjust: none;
+	user-select: none;
+}
+@media (prefers-color-scheme: light) {
+ :root {
+	--title-color: #000000;
+	--mask_toTop: linear-gradient(to top, #ffffff , transparent 100%);
+ }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+	--title-color: rgba(255, 255, 255, 1);
+	--mask_toTop: linear-gradient(to top, #1b1b1b , transparent 100%);
+  }
+}
+@font-face {
+  font-family: '字体';
+  src: url('font/字体.ttf')
+}
+body {
+	background-color: transparent;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 100vh;
+	overflow: hidden;
+	
+}
+.box {
+	top: 0;
+	bottom: 0px;
+	left: 0;
+	right: 0;
+	margin:0 auto;
+	position: absolute;
+	overflow: hidden;
+	background-color: transparent;
+	perspective: 1000px;
+}
+.bg_img {
+	overflow: hidden;
+	width: 110%;
+	height: 110%;
+	position: absolute;
+	z-index: 1;
+	left: -5%;
+	top: -5%;
+	transform-style: preserve-3d;
+}
+.bg_maker {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	z-index: 2;
+}
+.text_bg {
+	width: 100%;
+	top: 0;
+	bottom: 0px;
+	position: fixed;
+	background: var(--mask_toTop);
+	z-index: 3;
+	border-radius: 15px 15px 0 0;
+}
+.bg_img img {
+	width: 110%;
+	height: 110%;
+	left: -5%;
+	top: -5%;
+	object-position: 50% 40%;
+	object-fit: cover;
+	filter: blur(0px);
+	position: absolute;
+	transform-style: preserve-3d;
+	backface-visibility: hidden;
+	will-change: transform;
+}
+/* 高分辨率图片不模糊 */
+#img.high-res {
+	filter: blur(0px) !important;
+}
+/* 低分辨率图片保持模糊 */
+#img.low-res {
+	filter: blur(2px) !important;
+}
+#img {
+	z-index: 1;
+	opacity: .2;
+	transform: translateZ(-30px);
+}
+img{
+	-webkit-tap-highlight-color: transparent;
+}
+#imgTop {
+	z-index: 2;
+	transform: translateZ(-15px);
+}
+#title {
+	position: absolute;
+	z-index: 3;
+	left: 15px;
+	bottom: 70px;
+	font-size: 21px;
+	color: var(--title-color); 
+	width: 70%;
+	margin: 0 auto;
+	letter-spacing: 1px;
+	-webkit-text-stroke: 0.5px var(--title-color);
+	paint-order: stroke fill;
+	opacity: .7;
+	font-family: '字体';
+	white-space: normal;
+	overflow: hidden;
+	display: block;
+	line-height: 1.3em;
+}
+#title small.star {
+	font-size: 0.55em;
+	margin-left: 0.2em;
+	vertical-align: baseline;
+	position: relative;
+	top: -0.2em;
+}
+.movie-meta {
+	position: absolute;
+	z-index: 4;
+	bottom: 0px;
+	left: 15px;
+	width: 80%; 
+	flex-wrap: nowrap;
+	gap: 8px;  
+}
+.meta-item-container {
+	border-radius: 6px;
+	padding: 3px 0px;
+	flex-shrink: 0;
+	overflow: hidden;
+	display: flex;
+	opacity: .7;
+}
+.meta-item {
+	font-size: 13px;
+	color: var(--title-color);
+	white-space: nowrap;
+	display: inline-block;
+}
+@keyframes scrollText {
+	0% { transform: translateX(3%); }
+	100% { transform: translateX(-90%); }
+}
+.meta-item.scroll {
+	animation: scrollText 20s linear infinite;
+	padding-left: 0;
+	display: inline-block;
+	transform: translateX(3%);
+}
+@-webkit-keyframes 消减 {
+	0% {-webkit-transform: scale(1.2); opacity: 0.1;}
+	100% {-webkit-transform: scale(1); opacity: 0;}
+}
+@-webkit-keyframes reduce0 {
+	0% {-webkit-transform: scale(1.2);}
+	100% {-webkit-transform: scale(1);}
+}
+@-webkit-keyframes reduce {
+	0% { opacity: 0; }
+	100% { opacity: 1; }
+}
+
+@-webkit-keyframes reduce2 {
+	0% {opacity:0;}
+	100% {;opacity:1.0;}
+}
+@keyframes heartFloat {
+	0%   { transform: translate(-50%, -50%) rotate(0deg) scale(0); opacity: 0; }
+	20%  { transform: translate(-50%, -50%) rotate(var(--rotate)) scale(1.2); opacity: 0.9; }
+	40%  { transform: translate(-50%, -50%) rotate(var(--rotate)) scale(0.9); opacity: 1; }
+	50%  { transform: translate(-50%, -50%) rotate(var(--rotate)) scale(1.05); opacity: 1; }
+	60%  { transform: translate(-50%, -50%) rotate(var(--rotate)) scale(0.95); opacity: 1; }
+	100% { transform: translate(-50%, -80%) rotate(var(--rotate)) scale(1.5); opacity: 0; }
+}
+
+.heart-float {
+	position: fixed;
+	left: var(--x);
+	top: var(--y);
+	width: 100px;
+	height: 100px;
+	font-size: 100px;
+	line-height: 1;
+	pointer-events: none;
+	z-index: 9999;
+	animation: heartFloat 1.2s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards;
+	transform-origin: center bottom;
+	--rotate: 0deg;
+}
+
+.meta-item-container {
+	overflow: hidden;
+	white-space: nowrap;
+	display: flex;
+}
+.meta-item {
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+.meta-item.clone {
+	margin-left: 10px;
+}
+
+.bottom {
+	position: absolute;
+	z-index: 9;
+	width: 50px;
+	height: 50px;
+	font-size: 12px;
+	bottom: 4px;
+	right: 10px;
+	opacity: 0.5;
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	padding-bottom: 0px;
+}
+
+
+/* ===== 浮层展开主题样式 ===== */
+.theme-float-expand #img.blurred {
+	filter: blur(26px) !important;
+}
+.theme-float-expand #imgTop.round-to-square {
+	animation: roundToSquare 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.theme-float-expand #imgTop {
+	position: fixed;
+	z-index: 10;
+	object-fit: cover;
+	object-position: center top;
+	box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 4px rgba(255,255,255,0.1);
+	border: 3px solid rgba(255,255,255,0.2);
+}
+
+@keyframes roundToSquare {
+	0% {
+		width: 0;
+		height: 0;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+		border-radius: 50%;
+		/transform: translate(-50%, -50%);
+	}
+	100% {
+		left: 0;
+		right: 0;
+		top: 100px;
+		bottom: 150px;
+		width: 200px;
+		height: 200px;
+		margin: auto;
+		border-radius: 50%;
+		/transform: translate(0, 0);
+	}
+}
+
+</style>
+</head>
+<body>
+<div class="box"></div>
+<script type="text/javascript">
+function Alert(title, text) {
+	if (typeof(text) != 'string') text=JSON.stringify(text)
+	$$$(text).x5LazyRule((title) => {
+		confirm({title: title,
+			content: input,
+		})
+	},title)
+}
+function ToastMgr(text) {
+	fba.parseLazyRule($$$().lazyRule((text) => {
+		const hikerPop = $.require("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/hikerPop.js");
+		hikerPop.toastMeg(text);
+	}, text));
+}
+
+let ALLPath = fba.parseLazyRule($$$().lazyRule(() => {
+	return getPath('hiker://files/');
+}))
+
+let Invert_color = ALLPath+ 'cache/应用反色.json';
+function applyDarkModeStyles() {
+	const isPktDevice = /p/i.test(navigator.userAgent);
+	const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	if (isDarkMode) {
+		let darkColor = getComputedStyle(document.documentElement).getPropertyValue('--mask_toTop').trim().match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b/)?.[0];
+		let color = request(Invert_color)|| darkColor;
+		document.documentElement.classList.add('dark-mode-pkt');
+		document.documentElement.style.setProperty('--mask_toTop', `linear-gradient(to top, ${color}, transparent 100%)`);
+	}
+}
+document.addEventListener('DOMContentLoaded', applyDarkModeStyles);
+window.addEventListener('load', applyDarkModeStyles);
+setTimeout(applyDarkModeStyles, 100);
+const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+darkModeMediaQuery.addListener(applyDarkModeStyles);
+const observer = new MutationObserver(applyDarkModeStyles);
+observer.observe(document.documentElement, { childList: true, subtree: true });
+
+// 获取特定组件url参数
+const urlParams = new URLSearchParams(window.location.search);
+const paramValue = urlParams.get('url');
+function unescapeURL(str) {
+  return str.replace(/@AND@/g, '&').replace(/@HASH@/g, '#').replace(/amp;/g, '').replace(/nbsp;/g, '')
+}
+var data = JSON.parse(unescapeURL(paramValue)) || JSON.parse(fba.getVar("二级样式数据")) || {};
+
+var caseData = unescapeURL(urlParams.get('case'))
+
+var box = document.querySelector('.box');
+box.innerHTML = `
+	<div class="bg_img">
+		<div class="bg_maker"></div>
+		<img id="imgTop">
+		<img id="img">
+	</div>
+	<div class="text_bg"></div>
+	<p id="title">${data.片名}</p>
+	<div class="movie-meta">
+		${data.年份 ? `<div class="meta-item-container"><span class="meta-item year-country">${data.年份}</span></div>` : ''}
+		${data.类型 ? `<div class="meta-item-container"><span class="meta-item type">${data.类型}</span></div>` : ''}
+		${data.状态 ? `<div class="meta-item-container"><span class="meta-item actors">${data.状态}</span></div>` : ''}
+	</div>
+	<div class="bottom"><span>▼</span></div>
+`;
+
+document.querySelectorAll('.meta-item').forEach((item, index) => {
+	const container = item.parentElement;
+	const textWidth = item.scrollWidth;
+	const containerWidth = container.clientWidth;
+
+	if (textWidth > containerWidth) {
+		item.style.animation = 'none';
+		const clone = item.cloneNode(true);
+		clone.classList.add('clone');
+		container.appendChild(clone);
+		container.style.display = 'flex';
+		container.style.overflow = 'hidden';
+		const totalWidth = textWidth;
+		const speedPerPixel = 0.06;
+		const duration = Math.max(totalWidth * speedPerPixel, 20);
+		const keyframeName = `seamlessScroll-${index}`;
+		const style = document.createElement('style');
+		style.textContent = `
+			@keyframes ${keyframeName} {
+				0%   { transform: translateX(0); }
+				100% { transform: translateX(-${totalWidth}px); }
+			}
+		`;
+		document.head.appendChild(style);
+		item.style.animation = `${keyframeName} ${duration}s linear infinite`;
+		clone.style.animation = `${keyframeName} ${duration}s linear infinite`;
+	}
+});
+
+
+
+function fitTitleFontSize() {
+	const title = document.getElementById('title');
+	const lineHeight = parseFloat(getComputedStyle(title).lineHeight);
+	const maxLines = 2;
+	const maxHeight = lineHeight * maxLines;
+
+	let fontSize = 21;
+	title.style.fontSize = fontSize + 'px';
+
+	while (title.offsetHeight > maxHeight && fontSize > 10) {
+		fontSize--;
+		title.style.fontSize = fontSize + 'px';
+	}
+}
+window.addEventListener('load', fitTitleFontSize);
+window.addEventListener('resize', fitTitleFontSize);
+
+let 主题颜色 = fba.getVar("主题颜色") || "#F4A7B9"
+
+load_pic = data.图片.split('@')[0];
+
+let clean = (str) =>{
+	return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').replace(/(?:第[一二三四五六七八九十\d]+[季期部集]|全集)/g, '').trim().toLowerCase();
+}
+let TMDB_cache = localStorage.getItem('logo'+clean(data.片名));
+function TMDB_img() {
+	fba.parseLazyRuleAsync($$$().lazyRule((name, TMDB_cache, clean) => {
+		if(TMDB_cache) return TMDB_cache;
+		try{
+			function titleMatchWeight(html, keywordClean) {
+				const m = html.match(/<h2>([^<]+)/);
+				if (!m) return 999;
+				const txtClean = clean(m[1]);
+				if (txtClean === keywordClean)		   return 0;
+				if (txtClean.startsWith(keywordClean))   return 1;
+				if (txtClean.includes(keywordClean))	 return 2;
+				return 3;
+			}
+			const keywordClean = clean(name);
+			/*
+			let tmdb = request(`https://www.themoviedb.org/search?query=${keywordClean}`);
+			const cards = pdfa(tmdb, '.white_column&&.results');
+			//log(cards)
+			cards.sort((a, b) => titleMatchWeight(a, keywordClean) - titleMatchWeight(b, keywordClean));
+	
+			let tmdb_id = pdfh(cards[0], 'a&&href');
+			log(tmdb_id)
+			let img_html = request(`https://www.themoviedb.org${tmdb_id}/images/logos`);
+			let tmdb_img = pdfh(img_html, '.image&&href');
+			if(!tmdb_img) {
+				let a = pdfh(img_html, '#logos_menu_scroller&&li&&a&&href');
+				let a_url=pdfh(request(`https://www.themoviedb.org${a}`), '.image&&href')
+				tmdb_img = a_url
+			}
+			*/
+	
+			const options = {
+				method: 'GET',
+				headers: {
+					origin: 'https://developer.themoviedb.org',
+					Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2NDFiYTViZmQxY2QwN2EwOTEzMmY5ODllMjY3NDkxNiIsIm5iZiI6MTc2MDU5MTM5Mi4yMjEsInN1YiI6IjY4ZjA3ZTIwNzUzODk3OTViZGE4MmM3ZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.D4yc1TBSZ7dGLEvHWj_Nd4COV2Qm4BzQMAFKfHYbDpo'
+				}
+			};
+			let html=JSON.parse(fetch(`https://try.readme.io/https://api.themoviedb.org/3/search/multi?query=${keywordClean}&include_adult=false&page=1`, options))
+			//log(html)
+			html=html.results[0]
+			let id=html.media_type+'/'+html.id
+			let img_html = JSON.parse(fetch(`https://try.readme.io/https://api.themoviedb.org/3/${id}/images?language=zh-CN&include_image_language=zh`, options))
+			//log(img_html)
+			if ( img_html.logos.length==0 ) {
+				img_html = JSON.parse(fetch(`https://try.readme.io/https://api.themoviedb.org/3/${id}/images`, options))
+			}
+			let tmdb_img="https://image.tmdb.org/t/p/original"+img_html.logos[0].file_path;
+			//log(tmdb_img)
+			return tmdb_img;
+		} catch(e) {}
+	}, data.片名, TMDB_cache, clean), $$$.toString((name) => {
+		if (input) {
+			const logoImg = $('<img>')
+				.attr('src', input)
+				.css({
+					position: 'absolute',
+					zIndex: 3,
+					left: '15px',
+					bottom: '70px',
+					maxWidth: '50%',
+					maxHeight: '30%',
+					objectFit: 'contain',
+					opacity: 0,
+					transition: 'opacity 0.9s ease',
+					filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.7))',
+					cursor: 'pointer'
+				})
+				.on('load', function () {
+					requestAnimationFrame(() => $(this).css('opacity', 1));
+					$('#title').css('opacity', 0);
+					localStorage.setItem('logo'+clean(name), input);
+				})
+				.on('error', function () {
+				});
+			
+			$('.box').append(logoImg);
+			
+			logoImg.on('click', function () {
+				const $img = $(this);
+				navigator.vibrate([5]);
+			
+				if ($img.data('animating')) return;
+				$img.data('animating', true);
+			
+				$img.css('opacity', 0);
+				$('#title').css('opacity', 1);
+			
+				setTimeout(() => {
+					$img.css('opacity', 1);
+					$('#title').css('opacity', 0);
+					$img.data('animating', false);
+				}, 2000);
+			});
+		}
+	},data.片名));
+}
+TMDB_img()
+
+$(".bottom").click(function () {
+	fba.parseLazyRule($$$().lazyRule(() => {
+		const hikerPop = $.require("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/hikerPop.js");
+		hikerPop.scrollSmooth(-1, true);
+		return "hiker://empty";
+	}));
+	navigator.vibrate([5]);
+})
+
+
+$("#title").singleTap(function () {
+	navigator.vibrate([5]);
+	window.location.href='hiker://search?s='+data.片名
+});
+
+let height_set = ALLPath+ 'cache/x5二级高度.json';
+let MaxH = window.screen.height;
+fba.refreshX5Desc('list&&'+(Math.ceil(JSON.parse(request(height_set)||'39')/100*MaxH)));
+let ScreenH= ALLPath+'cache/屏幕高度.json';
+if(!request(ScreenH)) fba.writeFile(ScreenH, JSON.stringify(window.screen.height));
+function Seek() {
+	$$$().x5LazyRule((height_set,MaxH) => {
+		const hikerPop = $.require("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/hikerPop.js");
+		let percent = JSON.parse(request(height_set)||'39');
+
+		hikerPop.seekCenter({
+			title: "设置海报高度",
+			max: 61,
+			pos: percent-39,
+			onChange(pos, max, fromHtml) {
+				let trueRes = String(pos + 39);
+				let api = Math.ceil(trueRes/100*MaxH)
+				refreshX5Desc('list&&'+api);
+				return fromHtml("当前：" + ((pos + 39) + "%").fontcolor("red"));
+			},
+			rightClick(pos, max) {
+				let trueRes = String(pos + 39);
+				let api = Math.ceil(trueRes/100*MaxH)
+				refreshX5Desc('list&&'+api);
+				writeFile(height_set, JSON.stringify(trueRes));
+				setItem("seek", trueRes);
+				toast("已将高度度设置为：" + trueRes+'%');
+			},
+		});
+	},height_set,MaxH)
+}
+
+async function 选择() {
+	fba.clearVar("x5二级设置");
+	fba.parseLazyRuleAsync($$$("#noLoading#").lazyRule(() => {
+		const hikerPop = $.require("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/hikerPop.js");
+		hikerPop.selectCenter({
+			options: ["切换主题", "海报高度", "反色与阈值"],
+			columns: 1,
+			title: "设置选择",
+			click(a) {
+				putVar("x5二级设置", a);
+			},
+			longClick(a) {
+				return "toast://长按了" + a;
+			}
+		});
+	}), $$$.toString(() => {}));
+	let count=0;
+	var timing = setInterval(()=>{
+		count++;
+		if(count>500){
+			clearInterval(timing);
+		}
+		if (fba.getVar("x5二级设置") === "反色与阈值") {
+			Prompt('软件反色', '#1b1b1b')
+			clearInterval(timing);
+			fba.clearVar("x5二级设置");
+		} else if (fba.getVar("x5二级设置") === "海报高度") {
+			Seek()
+			clearInterval(timing);
+			fba.clearVar("x5二级设置");
+		} else if (fba.getVar("x5二级设置") === "切换主题") {
+			toggleTheme()
+			clearInterval(timing);
+			fba.clearVar("x5二级设置");
+		}
+	},10);
+}
+
+function Prompt(key, value) {
+	$$$(value).x5LazyRule((key) => {
+		let Invert_color = getPath('hiker://files/cache/应用反色.json');
+		let color = request(Invert_color)
+		
+		let Invert_blurred = getPath('hiker://files/cache/模糊阈值.json');
+		let blurred = request(Invert_blurred)
+		
+		let info = "取消";
+		let cancel = true;
+		if(color && color!=input) {
+			info = "恢复默认";
+			cancel = false
+		};
+		
+		const hikerPop = $.require("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/hikerPop.js");
+		/*
+		hikerPop.inputAutoRow({
+			hint: color || input,
+			title: key,
+			cancelTitle: info,
+			hideCancel: cancel,
+			noAutoSoft: false,
+			confirm(text) {
+				if (text != null && text != '') {
+					if ( key.indexOf("反色")>-1 && /^#[0-9A-Fa-f]{6}$/.test(text)) {
+						writeFile(Invert_color, text)
+						refreshPage(true);
+					} else {
+						return 'toast://请输入正确的十六进制色值'
+					}
+				}
+				return
+			},
+			cancel() {
+				if (color!=input) {
+					confirm({
+						title: `将${key}恢复默认`,
+						content: input,
+						confirm: $.toString((Invert_color, key, input) => {
+							writeFile(Invert_color, input)
+							refreshPage(true);
+						},Invert_color, key, input),
+						cancel: $.toString(() => {
+						})
+					});
+				}
+				return
+			}
+		});
+		*/
+		hikerPop.inputTwoRow({
+			titleHint: "系统反色",
+			titleDefault: color || "#1b1b1b",
+			urlHint: "自动模糊[宽度阈值]",
+			urlDefault: blurred||"500",
+			noAutoSoft: true, //不自动打开输入法
+			title: "封面设置",
+			//hideCancel: true,
+			confirm(s1, s2) {
+				if (/^(#[0-9A-Fa-f]{6})?$/.test(s1)) {
+					writeFile(Invert_color, s1)
+					refreshPage(true);
+				} else {
+					return 'toast://请输入正确的十六进制色值'
+				}
+				if (/^(\d+)?$/.test(s2)) {
+					writeFile(Invert_blurred, s2)
+					refreshPage(true);
+					} else {
+					return 'toast://请输入纯数字作为宽度阈值'
+				}
+				if(!s1) {
+					return "toast://反色已恢复默认#1b1b1b"
+					refreshPage(true);
+				}
+				if(!s2) {
+					return "toast://自动模糊阈值[宽度]已恢复默认500"
+					refreshPage(true);
+				}
+				return "toast://设定反色为：" + s1 + "\n自动模糊阈值为：" + s2;
+			},
+			cancel() {
+				//return "toast://你取消了"
+			}
+		});
+		return "hiker://empty";
+	},key)
+}
+
+$("body").longTap(function () {
+	选择()
+	navigator.vibrate([5]);
+});
+
+const CASE_FILE = ALLPath+ 'rules/Src/Juyue/case.json';
+const NewItem_FILE = ALLPath+ '_cache/Juyue/erdataCache.json';
+try{
+syncTitleStar(isCaseExists(caseData))
+} catch(e) {}
+
+let lastX = 0, lastY = 0;
+$(document).on('touchstart mousedown', e => {
+	const o = e.originalEvent;
+	const t = (o && o.touches && o.touches[0]) || e;
+	lastX = t.clientX;
+	lastY = t.clientY;
+});
+
+$(function () {
+	$('body').on('doubleTap', function (e) {
+		const x = lastX;
+		const y = lastY - 50;
+		const angle = (Math.random() * 60 - 30);
+
+		CaseOnce(caseData);
+
+		const symbol = isCaseExists(caseData) ? '⭐' : '😭';
+		const $heart = $(`<div class="heart-float">${symbol}</div>`);
+		$('body').append($heart);
+
+		$heart[0].style.setProperty('--x', x + 'px');
+		$heart[0].style.setProperty('--y', y + 'px');
+		$heart[0].style.setProperty('--rotate', angle.toFixed(2) + 'deg');
+
+		$heart.one('animationend webkitAnimationEnd', () => $heart.remove());
+		navigator.vibrate([10]);
+		setTimeout(() => navigator.vibrate([15]), 60);
+	});
+});
+
+
+function readCaseList() {
+	try {
+		return JSON.parse(request(CASE_FILE) || '[]');
+	} catch (e) {
+		return [];
+	}
+}
+
+function getBookmarkKey(item) {
+	const t = item.title || '';
+	const i = item.params.url.split('&')[0] || '';
+	return 'bk_' + t + '|' + i
+}
+
+function isCaseExists(newItem) {
+	if(typeof newItem == 'string') {
+		newItem = JSON.parse(newItem)
+	}
+	const newKey = getBookmarkKey(newItem);
+	return readCaseList().some(it => getBookmarkKey(it) === newKey);
+}
+function syncTitleStar(force) {
+	$('#title').find('small.star').remove();
+	if (force) {
+	}
+	renderBottomIcon();
+}
+
+function CaseOnce(newItem) {
+	if(typeof newItem == 'string') newItem = JSON.parse(newItem);
+	if (!newItem || !newItem.title) return false;
+
+	const key  = getBookmarkKey(newItem);
+	let list = readCaseList();
+	const idx  = list.findIndex(it => getBookmarkKey(it) === key);
+
+	if (idx !== -1) {
+		list.splice(idx, 1);
+		ToastMgr('已删除收藏');
+		$('#title').find('small.star').remove();
+	} else {
+		list.unshift(newItem);
+		ToastMgr('已加入书架');
+	}
+
+	fba.writeFile(CASE_FILE, JSON.stringify(list));
+	renderBottomIcon();
+	return true;
+}
+
+function renderBottomIcon() {
+	const isCollected = isCaseExists(caseData);
+	$('.bottom').html(isCollected ? '⭐' : '▼');
+}
+renderBottomIcon();
+
+const setupGyroEffectStr = `
+(function setupGyroEffect() {
+	const bgImg  = document.querySelector('.bg_img');
+	const img	= document.getElementById('img');
+	const imgTop = document.getElementById('imgTop');
+
+	if (!bgImg || !img || !imgTop) return;
+
+	let lastX = 0, lastY = 0;
+	let targetX = 0, targetY = 0;
+
+	const SENSE_GAMMA = 0.15;
+	const SENSE_BETA  = 0.15;
+	const FOREGROUND_FACTOR = 0.2;
+	const DAMPING	 = 0.055;
+	const MAX_TILT	= 6;
+
+	function handleOrientation(e) {
+		let gamma = e.gamma || 0;
+		let beta  = e.beta  || 0;
+
+		gamma = Math.max(-MAX_TILT, Math.min(MAX_TILT, gamma));
+		beta  = Math.max(-MAX_TILT, Math.min(MAX_TILT, beta));
+
+		targetX = gamma * SENSE_GAMMA;
+		targetY = beta  * SENSE_BETA;
+	}
+
+	if (window.DeviceOrientationEvent) {
+		window.addEventListener('deviceorientation', handleOrientation);
+	} else {
+		window.addEventListener('mousemove', e => {
+			const cx = window.innerWidth / 2;
+			const cy = window.innerHeight / 2;
+			targetX = (e.clientX - cx) *  0.03;
+			targetY = (e.clientY - cy) *  0.02;
+		});
+	}
+
+	function animate() {
+		lastX += (targetX - lastX) * DAMPING;
+		lastY += (targetY - lastY) * DAMPING;
+
+		const bgX = lastX * 6;
+		const bgY = lastY * 4;
+		const fgX = lastX * 6 * FOREGROUND_FACTOR;
+		const fgY = lastY * 4 * FOREGROUND_FACTOR;
+
+		bgImg.style.transform =
+			'rotateX(' + (-lastY * 0.9) + 'deg) ' +
+			'rotateY(' + ( lastX * 0.9) + 'deg) ' +
+			'translateX(' + bgX + 'px) ' +
+			'translateY(' + bgY + 'px)';
+
+		img.style.transform =
+			'translateZ(-30px) translateX(' + (bgX * 1.2) + 'px) translateY(' + (bgY * 1.2) + 'px)';
+
+		imgTop.style.transform =
+			'translateZ(-10px) translateX(' + fgX + 'px) translateY(' + fgY + 'px)';
+
+		requestAnimationFrame(animate);
+	}
+	animate();
+})();
+`;
+localStorage.setItem('3D函数', setupGyroEffectStr);
+
+let Invert_blurred = ALLPath+'cache/模糊阈值.json'
+let blurred = request(Invert_blurred)
+
+// 主题配置
+let currentTheme = localStorage.getItem('二级主题') || 'default';
+
+function applyTheme(theme) {
+	document.body.className = '';
+	if (theme === 'float-expand') {
+		document.body.classList.add('theme-float-expand');
+	} else {
+		document.body.classList.remove('theme-float-expand');
+	}
+	localStorage.setItem('二级主题', theme);
+}
+
+function toggleTheme() {
+	const themes = ['default', 'float-expand'];
+	const current = localStorage.getItem('二级主题') || 'default';
+	const nextIndex = (themes.indexOf(current) + 1) % themes.length;
+	const nextTheme = themes[nextIndex];
+	applyTheme(nextTheme);
+	ToastMgr('已切换至：' + (nextTheme === 'float-expand' ? '圆形浮层' : '默认样式'));
+	setTimeout(() => {
+		refreshPage(true); 
+	}, 500);
+}
+
+
+// 初始化主题
+applyTheme(currentTheme);
+
+window.onload = () => {
+	var loading = 'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDE3MiAyNDEiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDE3MiAyNDE7IiB4bWw6c3BhY2U9InByZXNlcnZlIj48c3R5bGUgdHlwZT0idGV4dC9jc3MiPi5zdDB7ZmlsbDpub25lO30uc3Qxe2ZpbGw6I0ZGNDQ4Rjt9LnN0MntmaWxsOiM1RUZGRkY7fS5zdDN7ZmlsbDojNzBEQUZGO30uc3Q0e2ZpbGw6Izc1QkRGRjt9LnN0NXtmaWxsOiM5NzY2RkY7fTwvc3R5bGU+PHJlY3QgaWQ9ImIiIGNsYXNzPSJzdDAiIHdpZHRoPSIxNzIiIGhlaWdodD0iMjQxIi8+PGNpcmNsZSBpZD0iX3gzNF9fMV8iIGNsYXNzPSJzdDEiIGN4PSI1MCIgY3k9IjkwIiByPSIzNCIvPjxjaXJjbGUgaWQ9Il94MzRfIiBjbGFzcz0ic3QyIiBjeD0iMTMzIiBjeT0iOTQiIHI9IjIwIi8+PGNpcmNsZSBpZD0iX3gzM18iIGNsYXNzPSJzdDMiIGN4PSI4OSIgY3k9IjEyNiIgcj0iMTIiLz48ZWxsaXBzZSBpZD0iX3gzMV8iIHRyYW5zZm9ybT0ibWF0cml4KDcuMDg4OTA0ZS0wMiAtMC45OTc1IDAuOTk3NSA3LjA4ODkwNGUtMDIgLTEwOS43MTM3IDI1My43MjIyKSIgY2xhc3M9InN0NSIgY3g9IjgxIiBjeT0iMTg1LjgiIHJ4PSI0MSIgcnk9IjQxIi8+PGc+PGNpcmNsZSBpZD0iX3gzMl8iIGNsYXNzPSJzdDQiIGN4PSIxMTMiIGN5PSIzOSIgcj0iMjUiLz48YW5pbWF0ZVRyYW5zZm9ybSBhdHRyaWJ1dGVOYW1lPSJ0cmFuc2Zvcm0iIGJlZ2luPSIwcyIgZHVyPSI3cyIgdHlwZT0icm90YXRlIiBmcm9tPSIxMjAgMTEzIDM5IiB0bz0iMzYwIDE2MCAxOTAiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+PC9nPjwvc3ZnPg==';
+	function AsyncImg(IMG){
+		requestAsync('https://api.qmbg.cn/imageformat/cutout',{
+			headers: { 'Token': 'eyJ1aWQiOjIwMTY2NDQzNiwidXNlcm5hbWUiOiIiLCJ0aW1lc3RhbXAiOjE3NTIwOTI4MzEsImV4cGlyZXNfYWZ0ZXIiOjE1NTUyMDAwLCJzb2Z0X2NvZGUiOiJpbWdfY3V0X3dlYl93dXhpIiwic29mdF9jaGFubmVsIjoiIiwic29mdF91bmlvbl9jb2RlIjoiIn0=.L3b3fWFrFeiNWgmoJPSRLLuiPGy6yi4RfOPyJM4av3TcPTAwy0NsCA8y5aaD14pi+DKSRAGITjo1kc5UB5LwXhrPg9c4FxeJnzz48tW4uLtAv8BCyqVxFW5B3OPG+gKnzFpUDy4bBmup7iJfSg3Hd12p3FRY7xyccpwzXrxAw90=' },
+			body: {"file_addr": IMG},
+			method: 'post',
+		},load_pic,(value, html)=>{
+			let mattingImg = JSON.parse(html).data.data.imageUrl;
+			var newImg = new Image();
+			newImg.src = mattingImg;
+			newImg.onload = () => {
+				$("#imgTop").attr('src', newImg.src);
+				$("#imgTop").css({"-webkit-animation": "reduce2 0.3s linear forwards"});
+				
+				$('.bg_img img').on('animationend webkitAnimationEnd', function() {
+					eval(localStorage.getItem('3D函数'))()
+				});
+				
+				requestAsync('https://api.qmbg.cn/imageformatV2/enhancement',{
+					headers: { 'Token': 'eyJ1aWQiOjIwMTY2NDQzNiwidXNlcm5hbWUiOiIiLCJ0aW1lc3RhbXAiOjE3NTc1MTUyOTQsImV4cGlyZXNfYWZ0ZXIiOjE1NTUyMDAwLCJzb2Z0X2NvZGUiOiJpbWFnZV9lbmhhbmNlX3d1eGkiLCJzb2Z0X2NoYW5uZWwiOiIiLCJzb2Z0X3VuaW9uX2NvZGUiOiIifQ==.poXdlf4GPNmtmuyxGpQ8MydYWgw2Nsk9I//Od20T5BvByp8geQSRRNkyGUkbeKMA6HSQVdrBBH0BxwQsRIMpQLmr8PDg5FaL9rXZjcI/TqTpGBRxFMgOCBngWQyY7iPk8sCjmRE7VkGKjy6gN4gN9brZxBCw4X+pBt6AF6PrK0s=' },
+					body: {"file_addr": mattingImg,"model":0,"molti":2},
+					method: 'post',
+				},load_pic,(value, html)=>{
+					let newimg = JSON.parse(html).data.imageurl
+					var newImg = new Image();
+					newImg.src = newimg;
+					newImg.onload = () => {
+						$("#imgTop").attr('src', newImg.src);
+						localStorage.setItem('抠图'+load_pic, newImg.src);
+					}
+				})
+			}
+		})
+	}
+			
+	function imageToBase64(url, callback) {
+		const img = new Image();
+		img.crossOrigin = 'Anonymous';
+		img.onload = function () {
+			const canvas = document.createElement('canvas');
+			canvas.width = img.width;
+			canvas.height = img.height;
+			const ctx = canvas.getContext('2d');
+			ctx.drawImage(img, 0, 0);
+			const dataURL = canvas.toDataURL('image/png');
+			callback(dataURL);
+		};
+		img.src = url;
+	}
+	function showPic(pic) {
+		let ts = request(ALLPath+"cache/二级封面.jpg")
+		if(ts) {
+			show = ALLPath+"cache/二级封面.jpg"+ '?s=' + (new Date()).getTime();
+		} else {
+			show = pic
+		}
+		fba.showPic(show)
+	};
+	
+	function isImageDead(src, cb) {
+		const img = new Image();
+		img.onload  = () => cb(false);
+		img.onerror = () => cb(true);
+		img.src = src;
+	}
+	
+	let CacheImg = localStorage.getItem('底图'+load_pic);
+	let mattingCache = localStorage.getItem('抠图'+load_pic)
+	//自动模糊
+	function addResClass(width) {
+		const isHighRes = width >= blurred;
+		const className = isHighRes ? 'high-res' : 'low-res';
+		$("#img").addClass(className);
+		//$("#imgTop").addClass(className);
+	}
+	if (CacheImg) {
+		
+		$("#img").attr('src', CacheImg);
+
+		const checkImg = new Image();
+		checkImg.onload = function(){addResClass(this.naturalWidth);}
+		checkImg.src = CacheImg;
+
+		// 根据主题应用不同效果
+		if (currentTheme === 'float-expand') {
+			$("#img").addClass('blurred');
+			$("#imgTop").attr('src', CacheImg);
+			$("#imgTop").addClass('round-to-square');
+		} else {
+			$("#img").css({"-webkit-animation": "reduce 0.7s linear forwards"});
+		}
+		
+		imageToBase64(CacheImg, function (base64) {
+			$(".text_bg").singleTap(function () {
+				navigator.vibrate([5]);
+				showPic(base64)
+			});
+		});
+		setTimeout(eval(setupGyroEffectStr)(), 00);
+		/*
+		isImageDead(mattingCache, expired => {
+			//if(expired) AsyncImg(load_pic)
+		});
+		*/
+	} else {
+		var newImg = new Image();
+		$(".bg_img").css({"-webkit-animation": "reduce0 0.5s linear forwards"});
+		newImg.src = load_pic;
+		if(!newImg.onload) {
+			$("#imgTop").attr('src', loading);
+			$("#imgTop").css({"opacity": "0.1"});
+		}
+		newImg.onload = function() {
+			addResClass(this.naturalWidth)
+			$("#img").attr('src', this.src);
+
+			if (currentTheme === 'float-expand') {
+				$("#img").addClass('blurred');
+				$("#imgTop").attr('src', this.src);
+				$("#imgTop").addClass('round-to-square');
+				$("#imgTop").css({"opacity": "1"});
+			} else {
+				$("#img").css({"-webkit-animation": "reduce 0.4s linear forwards"});
+				$("#imgTop").css({"-webkit-animation": "消减 0.4s linear forwards"});
+			}
+
+			localStorage.setItem('底图'+load_pic, newImg.src)
+			imageToBase64(this.src, function (base64) {
+				$(".text_bg").singleTap(function () {
+					navigator.vibrate([5]);
+					showPic(base64)
+				});
+			});
+			setTimeout(eval(setupGyroEffectStr)(), 00);
+			//AsyncImg(newImg.src)
+		}
+	}
+
+}
+/*
+fba.parseLazyRuleAsync($$$(load_pic).lazyRule(() => {
+	deleteFile(getPath("hiker://files/cache/二级封面.jpg"));
+	let 防盗;
+	let npic=input.split('@')[0];
+	let fdl = request(npic);
+	if (fdl.toLowerCase().includes('error')) {
+		防盗 = true;
+		try {
+			downloadFile(npic, getPath("hiker://files/cache/二级封面.jpg"), {
+				'Referer': input.split('Referer=')[1] || ""
+			});
+			if(!request(getPath("hiker://files/cache/二级封面.jpg"))) saveImage('http://img5.adesk.com/65cdaa70e7bce7301e0e4760?sign=90556f2e25f55944ecf614cbb1444a49&t=66b35e40', getPath("hiker://files/cache/二级封面.jpg"))
+		} catch (e) {
+			saveImage('http://img5.adesk.com/65cdaa70e7bce7301e0e4760?sign=90556f2e25f55944ecf614cbb1444a49&t=66b35e40', getPath("hiker://files/cache/二级封面.jpg"))
+		}
+	}
+	return (防盗+'&&'+input)
+}), $$$.toString((ALLPath) => {
+	if (input.split('&&')[0] == 'true') {
+		fba.log('图片防盗')
+		let pic = ALLPath+ "cache/二级封面.jpg" + '?s=' + (new Date()).getTime();
+		$("#img").attr('src', pic);
+	}
+}),ALLPath)
+*/
+var push_tips;
+async function update(Up) {
+	let ln = ALLPath+ 'rules/dzHouse/html/';
+	if (request(ln + 'ejys.json') != Up) {
+		var x5 = request('https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/二级X5样式.html');
+		if (x5.indexOf("bg_maker") > 0) {
+			fba.writeFile(ln + '二级X5样式.html', x5)
+			fba.writeFile(ln + 'ejys.json', Up);
+			if (push_tips) {
+				Alert("二级更新提示", push_tips)
+			} else { 
+				Alert("二级更新完成", "祝君顺利")
+			}
+		} else {
+			Alert("更新出错❌ \n\n可手动删除本地文件自动拉新")
+			fba.writeFile(ln + 'ejys.json', Up);
+		}
+	}
+}
+if (!fba.getVar('X5二级加载')) {
+	requestAsync("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/plug/ejys.js",(key,html)=>{eval(html);})
+	fba.putVar('X5二级加载', '完成')
+}
+</script>
+</body>
+</html>

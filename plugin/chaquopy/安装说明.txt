@@ -1,0 +1,31 @@
+Python 扩展（Chaquopy）自托管包
+================================
+
+安装位置：hiker://files/plugins/Chaquopy/
+聚影兼容：hiker://files/plugins/chaquopy/PythonHiker.js（只放入口文件即可）
+
+文件构成
+--------
+chaquopy.apk            Python 运行环境（含 3.8 标准库）
+classes.dex             Chaquopy Java 桥
+arm64-v8a/
+  libpython3.8.so       CPython 3.8 运行库（aarch64）
+  libchaquopy_java.so   JNI 桥（aarch64）
+libs_py/                hiker 侧基础库，供 sys.path 使用
+PythonHiker.js          入口脚本
+manifest.json           安装清单（规则按此逐文件下载）
+
+来源
+----
+chaquopy.apk / classes.dex / libs_py  取自 hjdhnx/hikerPy（hiker python 扩展公开实现）
+arm64-v8a 两个 .so                    取自 Maven Central：com.chaquo.python.runtime 12.0.1（Python 3.8, arm64-v8a）
+
+安装方式
+--------
+在海阔视界内打开「聚阅/聚影 → 管理 → Python扩展」，点「一键安装 / 修复」，
+规则会按 manifest.json 从本仓库把这些文件下载到上面的目录。
+
+注意
+----
+1. 只支持 arm64-v8a 设备（绝大多数安卓手机）；armeabi-v7a 老设备请勿使用。
+2. 如果手机此前装过官方扩展且能正常跑 py 源，可以不装；重新安装不会删除多余文件。

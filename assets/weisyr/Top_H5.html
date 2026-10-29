@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+	<title>Top_H5 v20260204</title>
+	<script src="https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/zepto.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/js/zepto-module.js"></script>
+	<style type="text/css">
+		* {
+			text-size-adjust: none;
+			-webkit-user-select: none;
+		}
+		@media (prefers-color-scheme: light) {
+		  :root {
+			--mask_toTop: linear-gradient(to top, white, transparent 100%);
+		  }
+		}
+		@media (prefers-color-scheme: dark) {
+		  :root {
+			--mask_toTop: linear-gradient(to top, #1b1b1b , transparent 100%);
+		  }
+		}
+		body {
+			background-color: transparent;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			min-height: 100vh;
+		}
+		@keyframes 淡入 {
+		0% {transform: scale(1); opacity: 0;}
+		100% {transform: scale(1.15); opacity: 1;}
+		}
+		@keyframes 淡出 {
+		0% {transform: scale(1.15); opacity: 1;}
+		100% {transform: scale(1); opacity: 0;}
+		}
+		.Pic_card {
+			top: 0;
+			bottom: 0px;
+			left: 0;
+			right: 0;
+			margin:0 auto;
+			position: absolute;
+			overflow: hidden;
+			background-color: transparent;
+		}
+		#frosted,
+		#mask_toTop {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+		}
+		#mask_toTop {
+			background: var(--mask_toTop);
+		}
+		#IMG {
+			position: absolute;
+			width: 105%;
+        	height: 105%;
+        	left: -5px;
+        	top: -5px;
+        	object-position: 50% 40%; /* 海报位置调整 */
+        	object-fit: cover;
+			transform: translate3d(0, 0, 0);
+		}
+		#frosted {
+			background: url("https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/img/frosted.png");
+			background-size: 12%;
+			opacity: .4;
+		}
+	</style>
+</head>
+<body>
+	<div class="Pic_card">
+		<img id="IMG"></img>
+		<div id='frosted'></div>
+		<div id="mask_toTop"></div>
+	</div>
+</body>
+<script type="text/javascript">
+	eval(fy_bridge_app.getInternalJs());
+	window.request = window.request00 || window.request;
+	let 开关定义图 =fba.getVar('定义图');
+	let keyword = fba.getVar('keyword');
+	let 定义图 = fba.getVar('Top_H5定义图');
+	let ALLPath = fba.parseLazyRule($$$().lazyRule(() => {
+        return getPath('hiker://files/');
+    }))
+	let 默认图=ALLPath+ 'cache/Top_H5默认图.jpg';
+	fba.putVar('默认图', 默认图)
+	let 本地图= ALLPath+'cache/Top_H5.jpg';
+	let img;
+	if(开关定义图=='true') {
+		img = 定义图;
+	} else {
+		img= 默认图
+	}
+	setTimeout(function() {
+		let 判断刷新=request(本地图);
+		if(localStorage.getItem('本地图') !=判断刷新) {
+			localStorage.setItem('本地图', 判断刷新);
+			img= 本地图 + '?t=' + new Date();
+		}
+		$('#IMG').css({"filter": "blur(5px)"});
+		$("#IMG").attr('src', img);
+		if(!keyword) {
+			$('#IMG').css({"animation":"淡入 0.5s linear forwards"});
+		} else {
+			if(fba.getVar('匹配海报') =='false') $("#IMG").attr('src', 'https://cdn.jsdelivr.net/gh/y249376764/juyue@main/assets/weisyr/img/TopImg0.png');
+			$('#IMG').css({"transform": "scale(1.15)"})
+			$('#IMG').css({"filter": "blur(2px)"});
+			$("#mask_toTop").click(function(){
+				fba.showPic(本地图 + '?t=' + new Date())
+			})
+		}
+	}, 300);
+	
+	let Invert_color = 'hiker://files/cache/应用反色.json';
+function applyDarkModeStyles() {
+	const isPktDevice = /p/i.test(navigator.userAgent);
+	const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	if (isDarkMode) {
+		let darkColor = getComputedStyle(document.documentElement).getPropertyValue('--mask_toTop').trim().match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b/)?.[0];
+		let color = request(Invert_color)|| darkColor;
+		document.documentElement.classList.add('dark-mode-pkt');
+		document.documentElement.style.setProperty('--mask_toTop', `linear-gradient(to top, ${color}, transparent 100%)`);
+	}
+}
+	// 初始检测
+	document.addEventListener('DOMContentLoaded', applyDarkModeStyles);
+	window.addEventListener('load', applyDarkModeStyles);
+	// 延迟检测（防止某些设备初始值不准确）
+	setTimeout(applyDarkModeStyles, 100);
+	// 监听暗色模式变化
+	const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+	darkModeMediaQuery.addListener(applyDarkModeStyles);
+	// 监听DOM变化（适用于动态加载内容）
+	const observer = new MutationObserver(applyDarkModeStyles);
+	observer.observe(document.documentElement, { childList: true, subtree: true });
+	
+	//搜索顶图
+	var 搜索建议 =(value) =>{
+	requestAsync('https://pbaccess.video.qq.com/trpc.videosearch.smartboxServer.HttpRountRecall/Smartbox',{
+		headers: {
+			"referer": "https://v.qq.com/",
+		},
+		method: 'post',
+		body: {
+			"query": value,
+			"appID": "3172",
+			"appKey": "lGhFIPeD3HsO9xEp",
+			"pageNum": 0,
+			"pageSize": 10
+		},
+	},value,(value, html)=>{
+		var result = JSON.parse(html);
+		var temp = result.data.smartboxItemList.filter(x => x.basicDoc.docname != '');
+		var d =temp.find((e) => (e.videoInfo.imgUrl));
+		if (d) {
+			var word=d.basicDoc.docname;
+			fba.putVar('匹配海报', true)
+			fba.log('已匹配搜索海报: '+word)
+			var img=d.videoInfo.imgUrl.replace('332','1080');
+			var ALLPath = fba.parseLazyRule($$$().lazyRule(() => {
+    return getPath('hiker://files/');
+}))
+			fba.saveImage(img, ALLPath+'cache/Top_H5.jpg');
+			$("#IMG").css({"animation":"淡出 0.3s linear forwards"});
+			setTimeout(function() {
+				$("#IMG").attr("src", img);
+				$("#IMG").css({"animation":"淡入 0.3s linear forwards"})
+			}, 300);
+		} else {
+			//匹配失败，进一步搜索
+			//猫眼电影
+			function 猫眼(input) {
+				let url='https://api.maoyan.com/mmdb/search/integrated/keyword/v1/list.json?offset=0&stype=[{"type":0}]&iscorrected=false&token=MY_l6QF1SFv4vd5XcxxUbblegYbk6MAAAAwU0ul-i_1qgkJ00cLSSjuOBCx_p4VbmeznYqeK7uoZk_UQ0CdqIKKvMm3LRuny52dAAAAtwAAAAEB&ci=387&gCi=387&lng=87.5739974975586&lat=43.84366989135742&channelId=70001&almtype=1&limit=10&abStatus=1&keyword=' +input;
+				var list = JSON.parse(request(url)).data[0].list[0]
+				//fba.log(JSON.stringify(list))
+				return {img: list.img, title: list.nm}
+			}
+			//荐片
+			function 荐片(input){
+				let s_url = 'https://api.ubj83.com/api/v2/search/videoV2?category_id=88&pageSize=1&page=1&key=' + input;
+				var list = JSON.parse(request(s_url)).data
+				return {img:'https://img1.vbwus.com' + list[0].thumbnail, title: list[0].title}
+			}
+			
+			let data = 荐片(value)
+			let s_img= data.img;
+			//fba.log(s_img)
+			$("#IMG").css({"animation":"淡出 0.3s linear forwards"});
+			if(s_img) {
+				fba.log('补充海报: '+data.title);
+				let ALLPath = fba.parseLazyRule($$$().lazyRule(() => {
+    return getPath('hiker://files/');
+}))
+				fba.saveImage(s_img, ALLPath+'cache/Top_H5.jpg');
+				setTimeout(function() {
+					$("#IMG").attr('src', s_img);
+					$("#IMG").css({"animation":"淡入 0.3s linear forwards"})
+				}, 300);
+				fba.putVar('匹配海报', true);
+			} else {
+				setTimeout(function() {
+					$("#IMG").attr('src', fba.getVar('默认图'));
+					$("#IMG").css({"animation":"淡入 0.3s linear forwards"})
+				}, 300);
+				fba.putVar('匹配海报', false)
+			}
+			
+		}
+	})};
+	
+	if(fba.getVar('keyword')) {
+		timer = setInterval(()=>{
+			if(localStorage.getItem('keyword') != fba.getVar('keyword')) {
+				localStorage.setItem('keyword', keyword)
+				搜索建议(keyword)
+			}
+			if(!fba.getVar('keyword')) clearInterval(timer)
+		}, 100);
+	}
+	
+	if(fba.getVar('动态刷新')){
+		timersx = setInterval(()=>{
+		let 动态刷新=request(本地图);
+		if(localStorage.getItem('本地图') !=动态刷新) {
+			localStorage.setItem('本地图', 动态刷新);
+			$("#IMG").css({"animation":"淡出 0.2s linear forwards"});
+			setTimeout(function() {
+				$("#IMG").attr("src", 本地图 + '?t=' + new Date());
+				$("#IMG").css({"animation":"淡入 0.2s linear forwards"})
+			}, 200);
+			}
+			if(!fba.getVar('动态刷新')) clearInterval(timersx)
+		}, 300);
+	}
+	
+</script>
+</html>
