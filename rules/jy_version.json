@@ -1,8 +1,8 @@
 {
-  "v": 82,
-  "build": 82,
-  "version": 82,
-  "url": "https://paste.c-net.org/HottestVariable",
-  "note": "v82：修复菜单页仍显示 v78（config 页 $.exports.version 与顶层 version 脱节，菜单读的是前者）；chaquopy 五个下载节点改为 yangmi2026/main/chaquopy.zip（18.4MB，仓库里唯一存在的包）",
+  "v": 83,
+  "build": 83,
+  "version": 83,
+  "url": "https://raw.githubusercontent.com/y249376764/juyue/main/rules/jy.txt",
+  "note": "v83：修复「已是 v82 仍提示更新到 v79」——Version() 里拿硬编码 BUILD=78 做比较，而界面显示的是 config.version=82，两套数；现在比较取两者最大值，弹窗也不再显示 BUILD。chaquopy 下载指向 yangmi2026/main/chaquopy.zip（18.4MB）。",
   "time": "2026-10-30"
 }
