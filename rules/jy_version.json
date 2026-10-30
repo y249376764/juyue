@@ -2,7 +2,7 @@
   "v": 80,
   "build": 80,
   "version": 80,
-  "url": "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
-  "note": "v80：修复解包只成功一半就锁标记（插件/图标长期缺失的根因），写文件前自动建子目录，全量写成功才落标记；版本戳换代强制补装一次",
+  "url": "https://paste.c-net.org/BravaRickie",
+  "note": "v80：修复解包只成功一半就锁标记（插件/图标长期缺失的根因）；写文件前自动建子目录；全量成功才落标记；版本戳换代强制补装一次",
   "time": "2026-10-30"
 }
