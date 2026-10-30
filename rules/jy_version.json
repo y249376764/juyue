@@ -1,8 +1,8 @@
 {
-  "v": 79,
-  "build": 79,
-  "version": 79,
-  "url": "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy79.txt",
-  "note": "v79 小壳版：口令 211KB（v78 是 977KB，手机上复制/导入容易失败）；源码与图标打成 pack.txt，首次打开下载 550KB 解包后本地运行；更新只下载一次、5 个镜像；聚阅已移除",
-  "time": "2026-10-29"
+  "v": 80,
+  "build": 80,
+  "version": 80,
+  "url": "https://fastly.jsdelivr.net/gh/y249376764/juyue@main/rules/jy.txt",
+  "note": "v80：修复解包只成功一半就锁标记（插件/图标长期缺失的根因），写文件前自动建子目录，全量写成功才落标记；版本戳换代强制补装一次",
+  "time": "2026-10-30"
 }
