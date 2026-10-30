@@ -1,8 +1,8 @@
 {
-  "v": 83,
-  "build": 83,
-  "version": 83,
+  "v": 84,
+  "build": 84,
+  "version": 84,
   "url": "https://raw.githubusercontent.com/y249376764/juyue/main/rules/jy.txt",
-  "note": "v83：修复「已是 v82 仍提示更新到 v79」——Version() 里拿硬编码 BUILD=78 做比较，而界面显示的是 config.version=82，两套数；现在比较取两者最大值，弹窗也不再显示 BUILD。chaquopy 下载指向 yangmi2026/main/chaquopy.zip（18.4MB）。",
+  "note": "v84：修复点重装后报「引入预处理插件失败」——preRule 里的 importGM 会在 preRule 之前按 config.聚影 去 jsDelivr 拉 plugins/globalmap.js，国内不通；现在去掉 importGM，globalmap 由 SrcParseS/SrcJyDrpy 按本地 hiker://files/rules/Src/Juying2/plugins/ 优先加载；版本戳换代强制重解包。",
   "time": "2026-10-30"
 }
