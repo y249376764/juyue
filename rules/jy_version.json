@@ -1,8 +1,8 @@
 {
-  "v": 81,
-  "build": 81,
-  "version": 81,
-  "url": "https://paste.c-net.org/CylonFight",
-  "note": "v81：修复 chaquopy 重装全部节点 404（原来指向 juyue/chaquopy.zip，仓库里只有 yangmi2026/chaquopy.zip 18.4MB）；解包标记改为全量成功才落，写文件前建子目录",
+  "v": 82,
+  "build": 82,
+  "version": 82,
+  "url": "https://paste.c-net.org/HottestVariable",
+  "note": "v82：修复菜单页仍显示 v78（config 页 $.exports.version 与顶层 version 脱节，菜单读的是前者）；chaquopy 五个下载节点改为 yangmi2026/main/chaquopy.zip（18.4MB，仓库里唯一存在的包）",
   "time": "2026-10-30"
 }
